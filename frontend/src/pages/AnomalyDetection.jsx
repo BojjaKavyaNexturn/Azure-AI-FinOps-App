@@ -284,7 +284,12 @@ export default function AnomalyDetection() {
                         <div className="card">
                             <div className="card-title">📈 Chart</div>
 
-                            {isWeekly ? (
+                            {!chartData ? (
+                                <div className="loading" style={{ padding: 40 }}>
+                                    <div className="spinner" /> Loading chart...
+                                </div>
+
+                            ) : isWeekly ? (
                                 <>
                                     <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
                                         Weekly average cost — +8% creep visible week over week
@@ -299,76 +304,109 @@ export default function AnomalyDetection() {
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </>
+
                             ) : tsData.length > 0 ? (
                                 <>
-                                    <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+                                    <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
                                         {selectedVm === 'vm-05' && 'Cost spikes 3× while CPU stays flat — classic billing anomaly'}
                                         {selectedVm === 'vm-09' && 'CPU active ~72% while cost drops to $0 — orphaned billing gap'}
                                         {selectedVm === 'vm-07' && 'Cost jumps 40% on dates when reservation not applied'}
                                         {selectedVm === 'vm-06' && 'CPU drops at reboot (Jan 04) — billing unchanged after resize'}
                                     </p>
-                                    <ResponsiveContainer width="100%" height={120}>
-                                        <LineChart data={tsData}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="time" tick={{ fontSize: 10 }} interval={Math.floor(tsData.length / 6)} />
-                                            <YAxis tick={{ fontSize: 10 }} />
-                                            <Tooltip formatter={v => [`$${v}`, 'Cost USD/hr']} />
+
+                                    {/* Cost USD chart */}
+                                    <div style={{ fontSize: 12, fontWeight: 600, color: '#E53E3E', marginBottom: 4 }}>
+                                        💰 Cost (USD / hr)
+                                    </div>
+                                    <ResponsiveContainer width="100%" height={160}>
+                                        <LineChart data={tsData} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                                            <XAxis
+                                                dataKey="time"
+                                                tick={{ fontSize: 10, fill: '#94A3B8' }}
+                                                interval={Math.floor(tsData.length / 5)}
+                                                label={{ value: 'Date (Jan 2026)', position: 'insideBottom', offset: -2, fontSize: 10, fill: '#64748B' }}
+                                                height={36}
+                                            />
+                                            <YAxis
+                                                tick={{ fontSize: 10, fill: '#94A3B8' }}
+                                                tickFormatter={v => `$${v}`}
+                                                label={{ value: 'USD/hr', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#64748B' }}
+                                                width={48}
+                                            />
+                                            <Tooltip
+                                                formatter={(v) => [`$${v}`, 'Cost USD/hr']}
+                                                labelFormatter={(l) => `Time: ${l}`}
+                                                contentStyle={{ background: '#1E293B', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }}
+                                            />
                                             <Line type="monotone" dataKey="cost" stroke="#E53E3E" dot={false} strokeWidth={2} name="Cost USD" />
                                         </LineChart>
                                     </ResponsiveContainer>
-                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', margin: '8px 0 4px', textAlign: 'center' }}>
-                                        Cost (USD/hr)
+
+                                    {/* CPU % chart */}
+                                    <div style={{ fontSize: 12, fontWeight: 600, color: '#059669', margin: '16px 0 4px' }}>
+                                        🖥️ CPU Utilisation (%)
                                     </div>
-                                    <ResponsiveContainer width="100%" height={100}>
-                                        <LineChart data={tsData}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="time" tick={{ fontSize: 10 }} interval={Math.floor(tsData.length / 6)} />
-                                            <YAxis tick={{ fontSize: 10 }} domain={[0, 100]} />
-                                            <Tooltip formatter={v => [`${v}%`, 'CPU']} />
+                                    <ResponsiveContainer width="100%" height={160}>
+                                        <LineChart data={tsData} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                                            <XAxis
+                                                dataKey="time"
+                                                tick={{ fontSize: 10, fill: '#94A3B8' }}
+                                                interval={Math.floor(tsData.length / 5)}
+                                                label={{ value: 'Date (Jan 2026)', position: 'insideBottom', offset: -2, fontSize: 10, fill: '#64748B' }}
+                                                height={36}
+                                            />
+                                            <YAxis
+                                                tick={{ fontSize: 10, fill: '#94A3B8' }}
+                                                domain={[0, 100]}
+                                                tickFormatter={v => `${v}%`}
+                                                label={{ value: 'CPU %', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#64748B' }}
+                                                width={48}
+                                            />
+                                            <Tooltip
+                                                formatter={(v) => [`${v}%`, 'CPU Utilisation']}
+                                                labelFormatter={(l) => `Time: ${l}`}
+                                                contentStyle={{ background: '#1E293B', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }}
+                                            />
                                             <Line type="monotone" dataKey="cpu" stroke="#059669" dot={false} strokeWidth={2} name="CPU %" />
                                         </LineChart>
                                     </ResponsiveContainer>
-                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, textAlign: 'center' }}>
-                                        CPU Utilisation (%)
-                                    </div>
+
+                                    {/* Network In chart — only for vm-05 */}
+                                    {selectedVm === 'vm-05' && (
+                                        <>
+                                            <div style={{ fontSize: 12, fontWeight: 600, color: '#7C3AED', margin: '16px 0 4px' }}>
+                                                🌐 Network In (MB) — Surge visible Jan 03–05
+                                            </div>
+                                            <ResponsiveContainer width="100%" height={140}>
+                                                <LineChart data={tsData} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                                                    <XAxis
+                                                        dataKey="time"
+                                                        tick={{ fontSize: 10, fill: '#94A3B8' }}
+                                                        interval={Math.floor(tsData.length / 5)}
+                                                        height={36}
+                                                        label={{ value: 'Date (Jan 2026)', position: 'insideBottom', offset: -2, fontSize: 10, fill: '#64748B' }}
+                                                    />
+                                                    <YAxis
+                                                        tick={{ fontSize: 10, fill: '#94A3B8' }}
+                                                        tickFormatter={v => `${v}MB`}
+                                                        width={70}
+                                                    />
+                                                    <Tooltip
+                                                        formatter={(v) => [`${v} MB`, 'Network In']}
+
+                                                        labelFormatter={(l) => `Time: ${l}`}
+                                                        contentStyle={{ background: '#1E293B', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }}
+                                                    />
+                                                    <Line type="monotone" dataKey="netIn" stroke="#7C3AED" dot={false} strokeWidth={2} name="Network In MB" />
+                                                </LineChart>
+                                            </ResponsiveContainer>
+                                        </>
+                                    )}
                                 </>
-                            ) : !chartData ? (
-                                <div className="loading" style={{ padding: 40 }}>
-                                    <div className="spinner" /> Loading chart...
-                                </div>
-                            ) : tsData.length > 0 ? (
-                                <>
-                                    <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
-                                        {selectedVm === 'vm-05' && 'Cost spikes 3× while CPU stays flat — classic billing anomaly'}
-                                        {selectedVm === 'vm-09' && 'CPU active ~72% while cost drops to $0 — orphaned billing gap'}
-                                        {selectedVm === 'vm-07' && 'Cost jumps 40% on dates when reservation not applied'}
-                                        {selectedVm === 'vm-06' && 'CPU drops at reboot (Jan 04) — billing unchanged after resize'}
-                                    </p>
-                                    <ResponsiveContainer width="100%" height={120}>
-                                        <LineChart data={tsData}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="time" tick={{ fontSize: 10 }} interval={Math.floor(tsData.length / 6)} />
-                                            <YAxis tick={{ fontSize: 10 }} />
-                                            <Tooltip formatter={v => [`$${v}`, 'Cost USD/hr']} />
-                                            <Line type="monotone" dataKey="cost" stroke="#E53E3E" dot={false} strokeWidth={2} name="Cost USD" />
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', margin: '8px 0 4px', textAlign: 'center' }}>
-                                        Cost (USD/hr)
-                                    </div>
-                                    <ResponsiveContainer width="100%" height={100}>
-                                        <LineChart data={tsData}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="time" tick={{ fontSize: 10 }} interval={Math.floor(tsData.length / 6)} />
-                                            <YAxis tick={{ fontSize: 10 }} domain={[0, 100]} />
-                                            <Tooltip formatter={v => [`${v}%`, 'CPU']} />
-                                            <Line type="monotone" dataKey="cpu" stroke="#059669" dot={false} strokeWidth={2} name="CPU %" />
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, textAlign: 'center' }}>
-                                        CPU Utilisation (%)
-                                    </div>
-                                </>
+
                             ) : (
                                 <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
                                     No chart data available for this anomaly.

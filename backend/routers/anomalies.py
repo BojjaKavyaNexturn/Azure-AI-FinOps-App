@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+from services.grok_service import generate_anomaly_explanation
 from services.data_loader import get_pm, get_bd
 from services.anomaly_engine import (
     get_summary, get_kpis, get_detail,
@@ -90,13 +91,11 @@ def export_report(vm_id: str):
 
 @router.get("/{vm_id}/ai-explain")
 def ai_explain(vm_id: str):
-    """Generate real AI explanation + recommended actions using OpenAI GPT."""
+    """Generate real AI explanation + recommended actions using Grok (xAI)."""
     detail = get_detail(vm_id)
     if not detail:
         raise HTTPException(status_code=404, detail=f"{vm_id} not found")
-    from services.openai_service import generate_anomaly_explanation
     return generate_anomaly_explanation(vm_id, detail)
-
 
 @router.post("/{vm_id}/resolve")
 def resolve_anomaly(vm_id: str):

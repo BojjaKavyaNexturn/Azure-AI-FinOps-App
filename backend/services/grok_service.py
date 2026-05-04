@@ -1,15 +1,14 @@
 import os
 import json
-from openai import OpenAI
+from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 def generate_anomaly_explanation(vm_id: str, meta: dict) -> dict:
-    """Use OpenAI GPT to generate a real explanation and recommended actions."""
+    """Use Groq (LLaMA3) to generate explanation and recommended actions."""
 
     prompt = f"""You are a senior Azure FinOps engineer analyzing cloud cost anomalies.
 
@@ -28,20 +27,20 @@ Respond with a JSON object containing exactly these 3 keys:
 2. "root_cause" — 2 sentences explaining the most likely technical root cause.
 3. "actions" — A list of exactly 3 specific, actionable steps the team should take to investigate and resolve this anomaly. Each action should be one clear sentence.
 
-Return only valid JSON, no markdown."""
+Return only valid JSON, no markdown, no backticks."""
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"},
             temperature=0.3,
             max_tokens=600,
         )
-        content = response.choices[0].message.content
+        content = response.choices[0].message.content.strip()
+        content = content.removeprefix("```json").removesuffix("```").strip()
         return json.loads(content)
     except Exception as e:
-        # Fallback if OpenAI fails
+        print(f"[Groq Error] {e}")
         return {
             "explanation": meta.get("explanation", "No explanation available."),
             "root_cause": "Could not generate AI root cause analysis.",
