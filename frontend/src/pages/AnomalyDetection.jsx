@@ -414,9 +414,10 @@ export default function AnomalyDetection() {
                             )}
                         </div>
 
+
                         {/* Right — AI Explanation + Recommended Actions */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                            <div className="card" style={{ flex: 1 }}>
+                            <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
                                 <div className="card-title">🤖 AI Explanation</div>
                                 {aiLoading ? (
                                     <div className="loading" style={{ padding: 20 }}>
@@ -424,12 +425,46 @@ export default function AnomalyDetection() {
                                     </div>
                                 ) : aiData ? (
                                     <>
-                                        <div className="explanation-box" style={{ marginBottom: 14 }}>
+                                        <div className="explanation-box" style={{ marginBottom: 0 }}>
                                             {aiData.explanation}
                                         </div>
                                         {aiData.root_cause && (
-                                            <div style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, borderLeft: '3px solid var(--blue-light)' }}>
+                                            <div style={{
+                                                fontSize: 13,
+                                                color: '#1406d9ff',
+                                                fontStyle: 'italic',
+                                                padding: '10px 14px',
+                                                background: 'rgba(255,255,255,0.03)',
+                                                borderRadius: 8,
+                                                borderLeft: '3px solid #1406d9ff'
+                                            }}>
                                                 <strong style={{ color: 'var(--text)', fontStyle: 'normal' }}>Root Cause:</strong> {aiData.root_cause}
+                                            </div>
+                                        )}
+                                        {aiData.alternative && (
+                                            <div style={{
+                                                fontSize: 13,
+                                                color: '#D97706',
+                                                padding: '10px 14px',
+                                                background: 'rgba(217,119,6,0.06)',
+                                                borderRadius: 8,
+                                                borderLeft: '3px solid #D97706',
+                                            }}>
+                                                <strong style={{ color: 'var(--text)', fontStyle: 'normal' }}>💡 Alternative:</strong> {aiData.alternative}
+                                            </div>
+                                        )}
+                                        {aiData.confidence_note && (
+                                            <div style={{
+                                                fontSize: 13,
+                                                color: '#4A9FD4',
+                                                padding: '10px 14px',
+                                                background: 'rgba(74,159,212,0.06)',
+                                                borderRadius: 8,
+                                                borderLeft: '3px solid #4A9FD4',
+                                            }}>
+                                                <strong style={{ color: 'var(--text)', fontStyle: 'normal' }}>
+                                                    📊 Confidence ({Math.round(detail.confidence * 100)}%):
+                                                </strong> {aiData.confidence_note}
                                             </div>
                                         )}
                                     </>
@@ -437,6 +472,7 @@ export default function AnomalyDetection() {
                                     <div className="explanation-box">{detail.explanation}</div>
                                 )}
                             </div>
+
 
                             {/* Recommended Actions */}
                             <div className="card">
@@ -455,9 +491,9 @@ export default function AnomalyDetection() {
                                             <div key={i} style={{
                                                 display: 'flex', gap: 12, alignItems: 'flex-start',
                                                 padding: '10px 14px',
-                                                background: 'rgba(255,255,255,0.03)',
+                                                background: 'rgba(74,159,212,0.05)',
                                                 borderRadius: 8,
-                                                border: '1px solid var(--border)',
+                                                border: '1px solid rgba(74,159,212,0.2)',
                                             }}>
                                                 <span style={{
                                                     minWidth: 24, height: 24, borderRadius: '50%',
@@ -465,7 +501,7 @@ export default function AnomalyDetection() {
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                     fontSize: 12, fontWeight: 700, flexShrink: 0,
                                                 }}>{i + 1}</span>
-                                                <span style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.6 }}>{action}</span>
+                                                <span style={{ fontSize: 14, color: '#0F172A', lineHeight: 1.6 }}>{action}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -474,19 +510,43 @@ export default function AnomalyDetection() {
                         </div>
                     </div>
 
-                    {/* Action result panels */}
+                    {/* ⚡ ACTION BUTTONS */}
+                    <div className="card">
+                        <div className="btn-row" style={{ flexWrap: 'wrap', gap: 8 }}>
+                            <button className="btn btn-primary" style={{ fontSize: 14, padding: '5px 10px' }} onClick={handleAuditBilling}>
+                                🔎 {showBilling ? 'Hide' : 'Audit'} Billing Rows
+                            </button>
+                            <button className="btn btn-ghost" style={{ fontSize: 14, padding: '5px 10px' }} onClick={handleAuditMetrics}>
+                                📊 {showMetrics ? 'Hide' : 'View'} Metric Rows
+                            </button>
+                            <button className="btn btn-purple" style={{ fontSize: 14, padding: '5px 10px' }} onClick={handleAlertOwner}>
+                                📧 Alert VM Owner ({detail.owner})
+                            </button>
+                            <button className="btn btn-amber" style={{ fontSize: 14, padding: '5px 10px' }} onClick={handleFix}>
+                                🛠️ Recommended Fix
+                            </button>
+                            <button className="btn btn-green" style={{ fontSize: 14, padding: '5px 10px' }} onClick={handleResolve}>
+                                ✅ Mark as Resolved
+                            </button>
+                            <a className="btn btn-ghost" style={{ fontSize: 14, padding: '5px 10px' }} href={exportAnomalyUrl(selectedVm)} download={`anomaly_report_${selectedVm}.csv`}>
+                                📥 Export CSV Report
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Action result panels — appear below buttons */}
                     {actionInfo.audit && (
-                        <div className="action-result mb-28">
+                        <div className="action-result mb-28" style={{ color: '#0F172A', borderColor: 'rgba(74,159,212,0.4)', background: 'rgba(74,159,212,0.08)' }}>
                             <strong>🔎 Audit:</strong> {actionInfo.audit}
                         </div>
                     )}
                     {actionInfo.email && (
-                        <div className="action-result mb-28" style={{ color: '#C4B5FD', borderColor: 'rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.08)' }}>
+                        <div className="action-result mb-28" style={{ color: '#5B21B6', borderColor: 'rgba(124,58,237,0.4)', background: 'rgba(124,58,237,0.08)' }}>
                             <strong>📧 Alert to {detail.owner}:</strong> {actionInfo.email}
                         </div>
                     )}
                     {actionInfo.fix && (
-                        <div className="action-result mb-28" style={{ color: '#FCD34D', borderColor: 'rgba(217,119,6,0.25)', background: 'rgba(217,119,6,0.08)' }}>
+                        <div className="action-result mb-28" style={{ color: '#92400E', borderColor: 'rgba(217,119,6,0.4)', background: 'rgba(217,119,6,0.08)' }}>
                             <strong>🛠️ Recommended Fix:</strong> {actionInfo.fix}
                         </div>
                     )}
@@ -509,14 +569,14 @@ export default function AnomalyDetection() {
                                         {billing.rows.slice(0, 20).map((r, i) => (
                                             <tr key={i}>
                                                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.Timestamp}</td>
-                                                <td style={{ fontFamily: 'var(--font-mono)', color: '#6EE7B7' }}>${r.CostUSD}</td>
+                                                <td style={{ fontFamily: 'var(--font-mono)', color: '#0F766E', fontWeight: 600 }}>${r.CostUSD}</td>
                                                 <td>
                                                     <span className={r.ReservationApplied === 'Yes' ? 'badge badge-green' : 'badge badge-red'}>
                                                         {r.ReservationApplied}
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#FC8181' }}>
+                                                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#DC2626', fontWeight: 600 }}>
                                                         {r.AnomalyFlag}
                                                     </span>
                                                 </td>
@@ -526,7 +586,7 @@ export default function AnomalyDetection() {
                                 </table>
                             </div>
                             {billing.count > 20 && (
-                                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
+                                <p style={{ fontSize: 12, color: '#64748B', marginTop: 8 }}>
                                     Showing first 20 of {billing.count} rows. Download full report below.
                                 </p>
                             )}
@@ -553,12 +613,12 @@ export default function AnomalyDetection() {
                                         {metrics.rows.slice(0, 20).map((r, i) => (
                                             <tr key={i}>
                                                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.Timestamp}</td>
-                                                <td style={{ fontFamily: 'var(--font-mono)' }}>{r.CPU_Percent}</td>
-                                                <td style={{ fontFamily: 'var(--font-mono)' }}>{r.Memory_Percent}</td>
-                                                <td style={{ fontFamily: 'var(--font-mono)' }}>{r.NetworkIn_MB}</td>
-                                                <td style={{ fontFamily: 'var(--font-mono)' }}>{r.NetworkOut_MB}</td>
+                                                <td style={{ fontFamily: 'var(--font-mono)', color: '#0F172A' }}>{r.CPU_Percent}</td>
+                                                <td style={{ fontFamily: 'var(--font-mono)', color: '#0F172A' }}>{r.Memory_Percent}</td>
+                                                <td style={{ fontFamily: 'var(--font-mono)', color: '#0F172A' }}>{r.NetworkIn_MB}</td>
+                                                <td style={{ fontFamily: 'var(--font-mono)', color: '#0F172A' }}>{r.NetworkOut_MB}</td>
                                                 <td>
-                                                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#FC8181' }}>
+                                                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#DC2626', fontWeight: 600 }}>
                                                         {r.AnomalyFlag}
                                                     </span>
                                                 </td>
@@ -569,35 +629,6 @@ export default function AnomalyDetection() {
                             </div>
                         </div>
                     )}
-
-                    {/* ⚡ ACTION BUTTONS */}
-                    <div className="card">
-                        <div className="card-title">⚡ Recommended Actions</div>
-                        <div className="btn-row">
-                            <button className="btn btn-primary" onClick={handleAuditBilling}>
-                                🔎 {showBilling ? 'Hide' : 'Audit'} Billing Rows
-                            </button>
-                            <button className="btn btn-ghost" onClick={handleAuditMetrics}>
-                                📊 {showMetrics ? 'Hide' : 'View'} Metric Rows
-                            </button>
-                            <button className="btn btn-purple" onClick={handleAlertOwner}>
-                                📧 Alert VM Owner ({detail.owner})
-                            </button>
-                            <button className="btn btn-amber" onClick={handleFix}>
-                                🛠️ Recommended Fix
-                            </button>
-                            <button className="btn btn-green" onClick={handleResolve}>
-                                ✅ Mark as Resolved
-                            </button>
-                            <a
-                                className="btn btn-ghost"
-                                href={exportAnomalyUrl(selectedVm)}
-                                download={`anomaly_report_${selectedVm}.csv`}
-                            >
-                                📥 Export CSV Report
-                            </a>
-                        </div>
-                    </div>
                 </>
             )}
 

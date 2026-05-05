@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import Home from './pages/Home.jsx'
 import AnomalyDetection from './pages/AnomalyDetection.jsx'
 import AutoTagging from './pages/AutoTagging.jsx'
+import Login from './pages/Login.jsx'
 
-// ── Theme definitions — uses EXACT variable names from index.css ──────────────
+// ── Theme definitions ─────────────────────────────────────────────────────────
 const THEMES = {
     navy: {
         label: 'Navy',
@@ -165,6 +166,9 @@ function Topbar() {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
+    const [isLoggedIn, setIsLoggedIn] = useState(
+        () => sessionStorage.getItem('finops-auth') === 'true'
+    )
     const [theme, setTheme] = useState(() => {
         return localStorage.getItem('finops-theme') || 'navy'
     })
@@ -172,6 +176,13 @@ export default function App() {
     useEffect(() => {
         applyTheme(theme)
     }, [])
+
+    if (!isLoggedIn) return (
+        <Login onLogin={() => {
+            sessionStorage.setItem('finops-auth', 'true')
+            setIsLoggedIn(true)
+        }} />
+    )
 
     return (
         <BrowserRouter>

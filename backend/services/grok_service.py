@@ -10,22 +10,29 @@ client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 def generate_anomaly_explanation(vm_id: str, meta: dict) -> dict:
     """Use Groq (LLaMA3) to generate explanation and recommended actions."""
 
-    prompt = f"""You are a senior Azure FinOps engineer analyzing cloud cost anomalies.
+    prompt = f"""You are a senior Azure FinOps engineer writing a client-facing anomaly report. Be concise, specific, and professional.
 
-Anomaly details:
+Anomaly:
 - VM: {vm_id}
-- Anomaly Type: {meta['title']}
-- Anomaly Flag: {meta['flag']}
+- Type: {meta['title']}
+- Flag: {meta['flag']}
 - Severity: {meta['severity']}
-- Detection Period: {meta['dates']}
-- Owner Team: {meta['owner']}
-- Estimated Monthly Saving if Fixed: ${meta['saving']}
-- Statistical Confidence: {int(meta['confidence'] * 100)}%
+- Period: {meta['dates']}
+- Owner: {meta['owner']}
+- Monthly Saving if Fixed: ${meta['saving']}
+- Confidence: {int(meta['confidence'] * 100)}%
 
-Respond with a JSON object containing exactly these 3 keys:
-1. "explanation" — A clear 3-4 sentence professional explanation of what this anomaly means, why it matters financially, and what the data pattern looks like.
-2. "root_cause" — 2 sentences explaining the most likely technical root cause.
-3. "actions" — A list of exactly 3 specific, actionable steps the team should take to investigate and resolve this anomaly. Each action should be one clear sentence.
+Respond with JSON with exactly these 4 keys:
+1. "explanation" — exactly 2 sentences. Sentence 1: What happened with specific numbers (cost, dates, VM). Sentence 2: Why this matters financially.
+2. "root_cause" — exactly 1 sentence. The single most specific technical cause (not generic like 'misconfiguration').
+3. "actions" — exactly 3 items. Each 8-12 words. Start with action verb. Be specific to this VM, dates, and anomaly type.
+4. "alternative" — exactly 1 sentence. A cost-saving alternative approach if the root cause cannot be fixed immediately.
+5. "confidence_note" — exactly 1 sentence. Explain what the {int(meta['confidence'] * 100)}% confidence score means for this specific anomaly and how reliable this detection is.
+
+Example of GOOD actions:
+- "Filter Billing_Data vm-05 Jan 03-05, compare CostUSD vs NetworkIn_MB"
+- "Alert SearchTeam: billing spike detected on vm-05, investigate network jobs"
+- "Review and cancel unrecognised background network transfers on vm-05"
 
 Return only valid JSON, no markdown, no backticks."""
 
