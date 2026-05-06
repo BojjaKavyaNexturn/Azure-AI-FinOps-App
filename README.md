@@ -213,4 +213,3 @@ Password: finops123
 
 ---
 
-*NexTurn Internal Project · Azure FinOps AI · Kavya Bojja (Anomaly Detection) · Likhith Nariyam (Auto-Tagging) · Mentor: Raviteja Vedula*
