@@ -119,7 +119,7 @@ Azure-AI-FinOps-App/
 │   └── generate_finops_v6.py
 │
 ├── docs/
-│   └── architecture.md
+│   └── architecture.svg
 │
 ├── README.md
 └── .gitignore
