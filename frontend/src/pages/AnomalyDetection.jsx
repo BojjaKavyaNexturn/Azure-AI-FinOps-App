@@ -40,12 +40,16 @@ export default function AnomalyDetection() {
     const [actionInfo, setActionInfo] = useState({})
     const [showBilling, setShowBilling] = useState(false)
     const [showMetrics, setShowMetrics] = useState(false)
+    const [fixFlow, setFixFlow] = useState(null) // null | 'ask' | 'proceed' | 'review' | 'chat'
+    const [chatInput, setChatInput] = useState('')
+    const [chatReply, setChatReply] = useState('')
+    const [chatLoading, setChatLoading] = useState(false)
 
     // Load KPIs and summary once
     useEffect(() => {
         Promise.all([
             getAnomalyKpis().then(setKpis),
-            getAnomalySummary().then(setSummary),
+            getAnomalySummary().then(data => setSummary([...data].sort((a, b) => b.saving - a.saving))),
         ]).catch(console.error).finally(() => setLoading(false))
     }, [])
 
@@ -61,6 +65,10 @@ export default function AnomalyDetection() {
         setShowMetrics(false)
         setAiData(null)
         setAiLoading(true)
+        setFixFlow(null)
+        setChatInput('')
+        setChatReply('')
+
 
         Promise.all([
             getAnomalyDetail(selectedVm).then(setDetail),
@@ -109,8 +117,44 @@ export default function AnomalyDetection() {
     }
 
     function handleFix() {
+        setFixFlow('ask')
         setActionInfo(s => ({ ...s, fix: detail?.action_fix }))
-        showToast('🛠️ Fix recommendation loaded')
+    }
+
+    async function handleFixProceed() {
+        setFixFlow('proceed')
+        showToast('✅ Action initiated by AI')
+    }
+
+    function handleFixReview() {
+        setFixFlow('review')
+        setShowBilling(true)
+        if (!billing) {
+            getAnomalyBilling(selectedVm).then(res => {
+                setBilling(res)
+            })
+        }
+    }
+
+    async function handleAskMore() {
+        if (!chatInput.trim()) return
+        setChatLoading(true)
+        try {
+            const res = await fetch('http://127.0.0.1:8000/api/anomalies/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    vm_id: selectedVm,
+                    question: chatInput,
+                    context: detail?.explanation
+                })
+            })
+            const data = await res.json()
+            setChatReply(data.reply)
+        } catch (e) {
+            setChatReply('Could not get a response. Please check backend.')
+        }
+        setChatLoading(false)
     }
 
     // Build chart data arrays
@@ -513,6 +557,9 @@ export default function AnomalyDetection() {
                     {/* ⚡ ACTION BUTTONS */}
                     <div className="card">
                         <div className="btn-row" style={{ flexWrap: 'wrap', gap: 8 }}>
+                            <button className="btn btn-amber" style={{ fontSize: 14, padding: '5px 10px' }} onClick={handleFix}>
+                                🛠️ Recommended Fix
+                            </button>
                             <button className="btn btn-primary" style={{ fontSize: 14, padding: '5px 10px' }} onClick={handleAuditBilling}>
                                 🔎 {showBilling ? 'Hide' : 'Audit'} Billing Rows
                             </button>
@@ -522,9 +569,7 @@ export default function AnomalyDetection() {
                             <button className="btn btn-purple" style={{ fontSize: 14, padding: '5px 10px' }} onClick={handleAlertOwner}>
                                 📧 Alert VM Owner ({detail.owner})
                             </button>
-                            <button className="btn btn-amber" style={{ fontSize: 14, padding: '5px 10px' }} onClick={handleFix}>
-                                🛠️ Recommended Fix
-                            </button>
+
                             <button className="btn btn-green" style={{ fontSize: 14, padding: '5px 10px' }} onClick={handleResolve}>
                                 ✅ Mark as Resolved
                             </button>
@@ -545,9 +590,107 @@ export default function AnomalyDetection() {
                             <strong>📧 Alert to {detail.owner}:</strong> {actionInfo.email}
                         </div>
                     )}
-                    {actionInfo.fix && (
-                        <div className="action-result mb-28" style={{ color: '#92400E', borderColor: 'rgba(217,119,6,0.4)', background: 'rgba(217,119,6,0.08)' }}>
-                            <strong>🛠️ Recommended Fix:</strong> {actionInfo.fix}
+                    {actionInfo.fix && fixFlow && (
+                        <div style={{
+                            border: '1px solid rgba(217,119,6,0.3)',
+                            borderRadius: 12,
+                            overflow: 'hidden',
+                            marginBottom: 20,
+                        }}>
+                            {/* Fix text */}
+                            <div style={{ padding: '16px 20px', background: 'rgba(217,119,6,0.06)' }}>
+                                <div style={{ fontWeight: 700, color: '#92400E', marginBottom: 6, fontSize: 13 }}>
+                                    🛠️ Recommended Fix
+                                </div>
+                                <div style={{ fontSize: 13, color: '#78350F', lineHeight: 1.7 }}>
+                                    {actionInfo.fix}
+                                </div>
+                            </div>
+
+                            {/* AI question — Shall I proceed? */}
+                            {fixFlow === 'ask' && (
+                                <div style={{ padding: '16px 20px', background: '#FFFBEB', borderTop: '1px solid rgba(217,119,6,0.15)' }}>
+                                    <div style={{ fontSize: 13, fontWeight: 600, color: '#1E293B', marginBottom: 12 }}>
+                                        🤖 AI Assistant: Shall I go ahead and do this for you?
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                        <button
+                                            onClick={handleFixProceed}
+                                            style={{ padding: '8px 18px', background: '#065F46', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+                                        >
+                                            ✅ Yes, Proceed
+                                        </button>
+                                        <button
+                                            onClick={handleFixReview}
+                                            style={{ padding: '8px 18px', background: '#1E40AF', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+                                        >
+                                            🔍 No, Let me Review
+                                        </button>
+                                        <button
+                                            onClick={() => setFixFlow('chat')}
+                                            style={{ padding: '8px 18px', background: '#5B21B6', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+                                        >
+                                            💬 No, I want to Ask More
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Yes Proceed — confirmation report */}
+                            {fixFlow === 'proceed' && (
+                                <div style={{ padding: '16px 20px', background: '#F0FDF4', borderTop: '1px solid #BBF7D0' }}>
+                                    <div style={{ fontWeight: 700, color: '#065F46', marginBottom: 10, fontSize: 13 }}>
+                                        ✅ Action Initiated — Confirmation Report
+                                    </div>
+                                    <div style={{ fontSize: 13, color: '#065F46', lineHeight: 1.8 }}>
+                                        <div>📌 <strong>VM:</strong> {selectedVm}</div>
+                                        <div>🔖 <strong>Anomaly:</strong> {detail?.title}</div>
+                                        <div>⚡ <strong>Action:</strong> {actionInfo.fix}</div>
+                                        <div>💰 <strong>Estimated Monthly Saving:</strong> ${detail?.saving}/mo</div>
+                                        <div>👤 <strong>Owner Notified:</strong> {detail?.owner}</div>
+                                        <div>📋 <strong>Status:</strong> Flagged for resolution — ticket raised</div>
+                                    </div>
+                                    <div style={{ marginTop: 12, fontSize: 12, color: '#6B7280', fontStyle: 'italic' }}>
+                                        Note: In V2 with real Azure API integration, this will execute the action directly.
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Ask More — chat input */}
+                            {fixFlow === 'chat' && (
+                                <div style={{ padding: '16px 20px', background: '#F5F3FF', borderTop: '1px solid #DDD6FE' }}>
+                                    <div style={{ fontWeight: 700, color: '#5B21B6', marginBottom: 10, fontSize: 13 }}>
+                                        💬 Ask AI anything about this anomaly
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <input
+                                            type="text"
+                                            value={chatInput}
+                                            onChange={e => setChatInput(e.target.value)}
+                                            onKeyDown={e => e.key === 'Enter' && handleAskMore()}
+                                            placeholder="e.g. What caused this spike? How long has this been happening?"
+                                            style={{
+                                                flex: 1, padding: '9px 14px', borderRadius: 8,
+                                                border: '1px solid #DDD6FE', fontSize: 13,
+                                                fontFamily: 'inherit', outline: 'none',
+                                                background: '#fff', color: '#1E293B'
+                                            }}
+                                        />
+                                        <button
+                                            onClick={handleAskMore}
+                                            disabled={chatLoading}
+                                            style={{ padding: '9px 18px', background: '#5B21B6', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+                                        >
+                                            {chatLoading ? '...' : 'Ask'}
+                                        </button>
+                                    </div>
+                                    {chatReply && (
+                                        <div style={{ marginTop: 12, padding: '12px 16px', background: '#fff', border: '1px solid #DDD6FE', borderRadius: 8, fontSize: 13, color: '#1E293B', lineHeight: 1.7 }}>
+                                            <strong style={{ color: '#5B21B6' }}>🤖 AI:</strong> {chatReply}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
 

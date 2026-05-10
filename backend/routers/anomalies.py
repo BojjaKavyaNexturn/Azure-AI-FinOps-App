@@ -9,6 +9,8 @@ from services.anomaly_engine import (
 )
 import io
 import csv
+import os
+import requests
 
 router = APIRouter()
 
@@ -109,3 +111,42 @@ def resolve_anomaly(vm_id: str):
         "resolved_at": datetime.utcnow().isoformat(),
         "message":    f"Anomaly {ANOMALY_META[vm_id]['flag']} on {vm_id} marked as resolved.",
     }
+
+
+@router.post("/chat")
+def anomaly_chat(payload: dict):
+    vm_id = payload.get("vm_id", "")
+    question = payload.get("question", "")
+    context = payload.get("context", "")
+
+    prompt = f"""You are a FinOps expert assistant. A user is asking about an Azure cost anomaly.
+
+Anomaly context:
+- VM: {vm_id}
+- AI Explanation: {context}
+
+User question: {question}
+
+Answer in 2-3 sentences, plain English, specific to this anomaly."""
+
+    headers = {
+        "Authorization": f"Bearer {os.getenv('GROQ_API_KEY')}",
+        "Content-Type": "application/json"
+    }
+    body = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.3
+    }
+
+    try:
+        res = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers=headers,
+            json=body
+        )
+        result = res.json()
+        reply = result["choices"][0]["message"]["content"].strip()
+        return {"reply": reply}
+    except Exception as e:
+        return {"reply": f"Error: {str(e)}"}

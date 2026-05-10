@@ -19,7 +19,7 @@ export default function Home() {
         Promise.all([
             getAnomalyKpis().then(setAKpis),
             getTaggingKpis().then(setTKpis),
-            getAnomalySummary().then(setSummary),
+            getAnomalySummary().then(data => setSummary([...data].sort((a, b) => b.saving - a.saving))),
         ])
             .catch(console.error)
             .finally(() => setLoading(false))

@@ -1,447 +1,5 @@
-// import { useEffect, useState } from 'react'
-// import {
-//     getTaggingKpis, getTaggingSummary, getVmTagDetail,
-//     applyTag, bulkApprove, exportTaggingUrl
-// } from '../api.js'
 
-// const VM_LIST = [
-//     'vm-01', 'vm-02', 'vm-03', 'vm-04', 'vm-05', 'vm-06', 'vm-07', 'vm-08', 'vm-09',
-//     'vm-10', 'vm-11', 'vm-12', 'vm-13', 'vm-14', 'vm-15', 'vm-16', 'vm-17'
-// ]
 
-// export default function AutoTagging() {
-//     const [kpis, setKpis] = useState(null)
-//     const [summary, setSummary] = useState([])
-//     const [selectedVm, setSelectedVm] = useState('vm-03')
-//     const [detail, setDetail] = useState(null)
-//     const [loading, setLoading] = useState(true)
-//     const [detailLoad, setDetailLoad] = useState(false)
-//     const [toast, setToast] = useState('')
-//     const [applied, setApplied] = useState({})
-//     const [bulkResult, setBulkResult] = useState(null)
-
-//     useEffect(() => {
-//         Promise.all([
-//             getTaggingKpis().then(setKpis),
-//             getTaggingSummary().then(setSummary),
-//         ]).catch(console.error).finally(() => setLoading(false))
-//     }, [])
-
-//     useEffect(() => {
-//         setDetailLoad(true)
-//         setDetail(null)
-//         getVmTagDetail(selectedVm)
-//             .then(setDetail)
-//             .catch(console.error)
-//             .finally(() => setDetailLoad(false))
-//     }, [selectedVm])
-
-//     function showToast(msg) {
-//         setToast(msg)
-//         setTimeout(() => setToast(''), 3500)
-//     }
-
-//     async function handleApplyTag(tagName, tagValue) {
-//         try {
-//             const res = await applyTag(selectedVm, tagName, tagValue)
-//             setApplied(s => ({ ...s, [tagName]: tagValue }))
-//             showToast(`✅ ${res.message}`)
-//         } catch (e) {
-//             showToast('❌ Failed to apply tag. Check backend.')
-//         }
-//     }
-
-//     async function handleBulkApprove() {
-//         try {
-//             const res = await bulkApprove()
-//             setBulkResult(res)
-//             showToast(`✅ ${res.message}`)
-//         } catch (e) {
-//             showToast('❌ Bulk approve failed.')
-//         }
-//     }
-
-//     const confColor = (c) => {
-//         if (c >= 0.85) return '#6EE7B7'
-//         if (c >= 0.75) return '#FCD34D'
-//         return '#FC8181'
-//     }
-
-//     const confBadge = (c) => {
-//         if (c >= 0.85) return 'badge badge-green'
-//         if (c >= 0.75) return 'badge badge-amber'
-//         return 'badge badge-red'
-//     }
-
-//     if (loading) return <div className="loading"><div className="spinner" /> Loading tagging data...</div>
-
-//     return (
-//         <div className="page">
-//             <div className="page-header">
-//                 <h1 className="page-title">🏷️ Context-Based Auto-Tagging Engine</h1>
-//                 <p className="page-subtitle">
-//                     Azure FinOps · Likhith Nariyam · AI infers missing Department and CostCenter tags
-//                     from owner, service name, environment, and CPU signals
-//                 </p>
-//             </div>
-
-//             {/* KPIs */}
-//             {kpis && (
-//                 <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
-//                     <div className="kpi-card">
-//                         <div className="kpi-label">Total VMs</div>
-//                         <div className="kpi-value">{kpis.total_vms}</div>
-//                         <div className="kpi-sub">Azure resources</div>
-//                     </div>
-//                     <div className="kpi-card kpi-green">
-//                         <div className="kpi-label">✅ Fully Tagged</div>
-//                         <div className="kpi-value">{kpis.complete}</div>
-//                         <div className="kpi-sub">All tags present</div>
-//                     </div>
-//                     <div className="kpi-card kpi-red">
-//                         <div className="kpi-label">❌ Missing Tags</div>
-//                         <div className="kpi-value">{kpis.incomplete}</div>
-//                         <div className="kpi-sub">Need tagging</div>
-//                     </div>
-//                     <div className="kpi-card kpi-blue">
-//                         <div className="kpi-label">Completion Rate</div>
-//                         <div className="kpi-value">{kpis.pct_complete}%</div>
-//                         <div className="kpi-sub">
-//                             <div className="progress-bar" style={{ marginTop: 4 }}>
-//                                 <div className="progress-fill" style={{
-//                                     width: `${kpis.pct_complete}%`,
-//                                     background: 'linear-gradient(90deg,var(--blue),#6EE7B7)',
-//                                 }} />
-//                             </div>
-//                         </div>
-//                     </div>
-//                 </div>
-//             )}
-
-//             {/* Tagging summary table */}
-//             <div className="card mb-28">
-//                 <div className="card-title">📋 All VMs — Tag Status</div>
-//                 <div className="table-wrap">
-//                     <table>
-//                         <thead>
-//                             <tr>
-//                                 <th>Resource ID</th>
-//                                 <th>Department Tag</th>
-//                                 <th>Environment</th>
-//                                 <th>Cost Center</th>
-//                                 <th>Missing Tag</th>
-//                                 <th>AI Suggested Value</th>
-//                                 <th>Tag Status</th>
-//                                 <th>Shutdown Candidate</th>
-//                             </tr>
-//                         </thead>
-//                         <tbody>
-//                             {summary.map(r => (
-//                                 <tr
-//                                     key={r.ResourceID}
-//                                     style={{
-//                                         cursor: 'pointer',
-//                                         background: selectedVm === r.ResourceID ? 'rgba(124,58,237,0.1)' : ''
-//                                     }}
-//                                     onClick={() => setSelectedVm(r.ResourceID)}
-//                                 >
-//                                     <td>
-//                                         <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--blue-light)', fontWeight: 600 }}>
-//                                             {r.ResourceID}
-//                                         </span>
-//                                     </td>
-//                                     <td>{r.DeptTag || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>— missing —</span>}</td>
-//                                     <td><span className="badge badge-teal">{r.EnvTag}</span></td>
-//                                     <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.CostCenterTag}</td>
-//                                     <td>
-//                                         {r.MissingTag
-//                                             ? <span style={{ color: '#FC8181', fontSize: 12, fontFamily: 'var(--font-mono)' }}>{r.MissingTag}</span>
-//                                             : <span style={{ color: '#6EE7B7', fontSize: 12 }}>—</span>
-//                                         }
-//                                     </td>
-//                                     <td>
-//                                         {r.AI_SuggestedDept
-//                                             ? <span className="tag-chip">{r.AI_SuggestedDept}</span>
-//                                             : '—'
-//                                         }
-//                                     </td>
-//                                     <td>
-//                                         <span className={r.TagStatus === 'Complete' ? 'badge badge-green' : 'badge badge-red'}>
-//                                             {r.TagStatus}
-//                                         </span>
-//                                     </td>
-//                                     <td>
-//                                         <span className={r.ShutdownCandidate === 'Yes' ? 'badge badge-amber' : 'badge badge-teal'}>
-//                                             {r.ShutdownCandidate}
-//                                         </span>
-//                                     </td>
-//                                 </tr>
-//                             ))}
-//                         </tbody>
-//                     </table>
-//                 </div>
-//                 <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 10 }}>
-//                     👆 Click any row to see AI tag suggestion and drill-down
-//                 </p>
-//             </div>
-
-//             {/* VM Drill-down */}
-//             <div className="page-header" style={{ marginBottom: 16 }}>
-//                 <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, color: 'var(--white)' }}>
-//                     🔎 Select ResourceID — AI Tag Suggestion
-//                 </h2>
-//             </div>
-
-//             <div className="select-wrap">
-//                 <select value={selectedVm} onChange={e => setSelectedVm(e.target.value)}>
-//                     {VM_LIST.map(vm => (
-//                         <option key={vm} value={vm}>{vm}</option>
-//                     ))}
-//                 </select>
-//                 <span className="select-arrow">▾</span>
-//             </div>
-
-//             {detailLoad && <div className="loading"><div className="spinner" /> Loading tag detail...</div>}
-
-//             {detail && !detailLoad && (
-//                 <div className="grid-2 mb-28">
-
-//                     {/* Left — Resource Context */}
-//                     <div className="card">
-//                         <div className="card-title">🗂️ Resource Context</div>
-//                         <div className="table-wrap">
-//                             <table>
-//                                 <tbody>
-//                                     {Object.entries(detail.resource_context)
-//                                         .filter(([k]) => !['__index__'].includes(k))
-//                                         .map(([k, v]) => (
-//                                             <tr key={k}>
-//                                                 <td style={{ color: 'var(--text-muted)', fontSize: 12, width: 160 }}>{k}</td>
-//                                                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>
-//                                                     {k === 'comp'
-//                                                         ? <span className={v === 'Compliant' ? 'badge badge-green' : 'badge badge-red'}>{v}</span>
-//                                                         : String(v) || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>—</span>
-//                                                     }
-//                                                 </td>
-//                                             </tr>
-//                                         ))}
-//                                 </tbody>
-//                             </table>
-//                         </div>
-//                     </div>
-
-//                     {/* Right — Tag Decision */}
-//                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-//                         {/* Tag decision */}
-//                         <div className="card">
-//                             <div className="card-title">🧠 Tag Decision</div>
-//                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-//                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-//                                     <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>Department</span>
-//                                     <span className="tag-chip">{detail.suggested_department}</span>
-//                                 </div>
-//                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-//                                     <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>Cost Center</span>
-//                                     <span className="tag-chip">{detail.suggested_cost_center}</span>
-//                                 </div>
-//                             </div>
-
-//                             {/* Confidence */}
-//                             <div style={{ marginTop: 16 }}>
-//                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-//                                     <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Confidence (System)</span>
-//                                     <span className={confBadge(detail.confidence)}>
-//                                         {Math.round(detail.confidence * 100)}%
-//                                     </span>
-//                                 </div>
-//                                 <div className="progress-bar">
-//                                     <div className="progress-fill" style={{
-//                                         width: `${detail.confidence * 100}%`,
-//                                         background: confColor(detail.confidence),
-//                                     }} />
-//                                 </div>
-//                             </div>
-
-//                             {/* Confidence Breakdown */}
-//                             <div style={{ marginTop: 14 }}>
-//                                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
-//                                     🧮 Confidence Breakdown
-//                                 </div>
-//                                 <div className="conf-breakdown">
-//                                     {Object.entries(detail.confidence_breakdown).map(([key, val]) => (
-//                                         <div className="conf-row" key={key}>
-//                                             <span className="conf-key">{key}</span>
-//                                             <div className="progress-bar" style={{ flex: 1 }}>
-//                                                 <div className="progress-fill" style={{
-//                                                     width: `${val * 100}%`,
-//                                                     background: 'var(--blue)',
-//                                                 }} />
-//                                             </div>
-//                                             <span className="conf-pct">{Math.round(val * 100)}%</span>
-//                                         </div>
-//                                     ))}
-//                                 </div>
-//                             </div>
-//                         </div>
-
-//                         {/* Signals */}
-//                         <div className="card">
-//                             <div className="card-title">🔎 Signals Used</div>
-//                             <div className="json-box">
-//                                 {'{'}
-//                                 {Object.entries(detail.signals_used).map(([k, v]) => (
-//                                     <div key={k} style={{ paddingLeft: 12 }}>
-//                                         <span style={{ color: '#F6C90E' }}>"{k}"</span>
-//                                         {' : '}
-//                                         <span style={{ color: '#98C379' }}>"{v}"</span>
-//                                     </div>
-//                                 ))}
-//                                 {'}'}
-//                             </div>
-//                         </div>
-//                     </div>
-//                 </div>
-//             )}
-
-//             {detail && !detailLoad && (
-//                 <>
-//                     <div className="grid-2 mb-28">
-//                         {/* Reasoning */}
-//                         <div className="card">
-//                             <div className="card-title">📝 Reasoning</div>
-//                             <div className="explanation-box">{detail.reasoning}</div>
-//                         </div>
-
-//                         {/* Alternative + Action */}
-//                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-//                             <div className="card">
-//                                 <div className="card-title">🔄 Alternative</div>
-//                                 <div className="explanation-box" style={{ background: 'rgba(124,58,237,0.07)', borderColor: 'rgba(124,58,237,0.2)' }}>
-//                                     {detail.alternative}
-//                                 </div>
-//                             </div>
-//                             <div className="card">
-//                                 <div className="card-title">⚡ Action</div>
-//                                 <div className="explanation-box" style={{ background: 'rgba(5,150,105,0.07)', borderColor: 'rgba(5,150,105,0.2)' }}>
-//                                     {detail.action}
-//                                 </div>
-//                             </div>
-//                         </div>
-//                     </div>
-
-//                     {/* Action Buttons */}
-//                     <div className="card mb-28">
-//                         <div className="card-title">⚡ Actions</div>
-//                         <div className="btn-row">
-//                             <button
-//                                 className="btn btn-primary"
-//                                 onClick={() => handleApplyTag('DepartmentTag', detail.suggested_department)}
-//                                 disabled={!!applied['DepartmentTag']}
-//                             >
-//                                 🚀 Apply DepartmentTag={detail.suggested_department}
-//                             </button>
-
-//                             <button
-//                                 className="btn btn-green"
-//                                 onClick={() => handleApplyTag('CostCenterTag', detail.suggested_cost_center)}
-//                                 disabled={!!applied['CostCenterTag']}
-//                             >
-//                                 ✅ Apply CostCenterTag={detail.suggested_cost_center}
-//                             </button>
-
-//                             <button className="btn btn-purple" onClick={handleBulkApprove}>
-//                                 🔄 Bulk Approve All ≥85% Confidence
-//                             </button>
-
-//                             <a
-//                                 className="btn btn-ghost"
-//                                 href={exportTaggingUrl()}
-//                                 download="tagging_report.csv"
-//                             >
-//                                 📥 Export Tagging Report CSV
-//                             </a>
-//                         </div>
-
-//                         {applied['DepartmentTag'] && (
-//                             <div className="action-result" style={{ marginTop: 12 }}>
-//                                 ✅ DepartmentTag = <strong>{applied['DepartmentTag']}</strong> applied to {selectedVm}
-//                             </div>
-//                         )}
-//                         {applied['CostCenterTag'] && (
-//                             <div className="action-result">
-//                                 ✅ CostCenterTag = <strong>{applied['CostCenterTag']}</strong> applied to {selectedVm}
-//                             </div>
-//                         )}
-//                     </div>
-
-//                     {/* Bulk approve result */}
-//                     {bulkResult && (
-//                         <div className="card mb-28">
-//                             <div className="card-title">🔄 Bulk Approve Results — {bulkResult.approved_count} tags approved</div>
-//                             <div className="table-wrap">
-//                                 <table>
-//                                     <thead>
-//                                         <tr>
-//                                             <th>Resource ID</th>
-//                                             <th>Missing Tag</th>
-//                                             <th>Suggested Value</th>
-//                                             <th>Confidence</th>
-//                                             <th>Reason</th>
-//                                         </tr>
-//                                     </thead>
-//                                     <tbody>
-//                                         {bulkResult.approved.map((r, i) => (
-//                                             <tr key={i}>
-//                                                 <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--blue-light)' }}>{r.ResourceID}</td>
-//                                                 <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.MissingTag}</td>
-//                                                 <td><span className="tag-chip">{r.SuggestedValue}</span></td>
-//                                                 <td><span className="badge badge-green">{Math.round(r.Confidence * 100)}%</span></td>
-//                                                 <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{r.Reason}</td>
-//                                             </tr>
-//                                         ))}
-//                                     </tbody>
-//                                 </table>
-//                             </div>
-//                         </div>
-//                     )}
-
-//                     {/* System evaluation */}
-//                     <div className="card">
-//                         <div className="card-title">📊 System Evaluation Dashboard</div>
-//                         {kpis && (
-//                             <div className="grid-3">
-//                                 {[
-//                                     { label: 'Total VMs Analysed', val: kpis.total_vms, color: 'var(--text)' },
-//                                     { label: 'Tags Completed', val: kpis.complete, color: '#6EE7B7' },
-//                                     { label: 'Tags Still Missing', val: kpis.incomplete, color: '#FC8181' },
-//                                     { label: 'Completion Rate', val: kpis.pct_complete + '%', color: 'var(--blue-xlight)' },
-//                                     { label: 'High Confidence (≥85%)', val: '7 suggestions', color: '#6EE7B7' },
-//                                     { label: 'Est. Cost Unattributed', val: 'Unknown', color: '#FCD34D' },
-//                                 ].map(({ label, val, color }) => (
-//                                     <div key={label} style={{
-//                                         background: 'rgba(255,255,255,0.03)',
-//                                         borderRadius: 'var(--radius-sm)',
-//                                         padding: 16,
-//                                         border: '1px solid var(--border)',
-//                                     }}>
-//                                         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>{label}</div>
-//                                         <div style={{
-//                                             fontSize: 22, fontFamily: 'var(--font-display)',
-//                                             fontWeight: 800, color,
-//                                         }}>{val}</div>
-//                                     </div>
-//                                 ))}
-//                             </div>
-//                         )}
-//                     </div>
-//                 </>
-//             )}
-
-//             {toast && <div className="toast">{toast}</div>}
-//         </div>
-//     )
-// }
 
 import { useEffect, useState } from 'react'
 import {
@@ -453,6 +11,34 @@ const VM_LIST = [
     'vm-01', 'vm-02', 'vm-03', 'vm-04', 'vm-05', 'vm-06', 'vm-07', 'vm-08', 'vm-09',
     'vm-10', 'vm-11', 'vm-12', 'vm-13', 'vm-14', 'vm-15', 'vm-16', 'vm-17'
 ]
+
+// ── Light-theme color tokens ─────────────────────────────────────────────────
+const C = {
+    text: '#0F172A',
+    textMid: '#334155',
+    textMuted: '#64748B',
+    border: '#E2E8F0',
+    bgCard: '#FFFFFF',
+    bgRow: '#F8FAFC',
+    bgHover: 'rgba(99,102,241,0.06)',
+    blue: '#1D4ED8',
+    blueLight: '#3B82F6',
+    green: '#059669',
+    greenLight: '#D1FAE5',
+    greenText: '#065F46',
+    red: '#DC2626',
+    redLight: '#FEE2E2',
+    redText: '#991B1B',
+    amber: '#D97706',
+    amberLight: '#FEF3C7',
+    amberText: '#92400E',
+    teal: '#0D9488',
+    tealLight: '#CCFBF1',
+    tealText: '#134E4A',
+    purple: '#7C3AED',
+    purpleLight: '#EDE9FE',
+    purpleText: '#4C1D95',
+}
 
 export default function AutoTagging() {
     const [kpis, setKpis] = useState(null)
@@ -475,6 +61,7 @@ export default function AutoTagging() {
     useEffect(() => {
         setDetailLoad(true)
         setDetail(null)
+        setApplied({})  // ← add this line
         getVmTagDetail(selectedVm)
             .then(setDetail)
             .catch(console.error)
@@ -486,11 +73,50 @@ export default function AutoTagging() {
         setTimeout(() => setToast(''), 3500)
     }
 
+
     async function handleApplyTag(tagName, tagValue) {
         try {
             const res = await applyTag(selectedVm, tagName, tagValue)
             setApplied(s => ({ ...s, [tagName]: tagValue }))
             showToast(`✅ ${res.message}`)
+
+            // Update summary table immediately
+            setSummary(prev => prev.map(r => {
+                if (r.ResourceID !== selectedVm) return r
+                const updatedRow = { ...r }
+                if (tagName === 'DepartmentTag') {
+                    updatedRow.DeptTag = tagValue
+                    updatedRow.MissingTag = r.MissingTag === 'DepartmentTag' ? null : r.MissingTag
+                }
+                if (tagName === 'CostCenterTag') {
+                    updatedRow.CostCenterTag = tagValue
+                    updatedRow.MissingTag = r.MissingTag === 'CostCenterTag' ? null : r.MissingTag
+                }
+                const deptOk = updatedRow.DeptTag && updatedRow.DeptTag !== '— missing —'
+                const ccOk = updatedRow.CostCenterTag && updatedRow.CostCenterTag !== '— missing —'
+                updatedRow.TagStatus = (deptOk && ccOk) ? 'Complete' : 'Incomplete'
+                return updatedRow
+            }))
+
+            // ← ADD THIS — update KPI cards live
+            setKpis(prev => {
+                if (!prev) return prev
+                const updatedSummary = summary.map(r => {
+                    if (r.ResourceID !== selectedVm) return r
+                    const updatedRow = { ...r }
+                    if (tagName === 'DepartmentTag') updatedRow.DeptTag = tagValue
+                    if (tagName === 'CostCenterTag') updatedRow.CostCenterTag = tagValue
+                    const deptOk = updatedRow.DeptTag
+                    const ccOk = updatedRow.CostCenterTag
+                    updatedRow.TagStatus = (deptOk && ccOk) ? 'Complete' : 'Incomplete'
+                    return updatedRow
+                })
+                const complete = updatedSummary.filter(r => r.TagStatus === 'Complete').length
+                const incomplete = updatedSummary.filter(r => r.TagStatus === 'Incomplete').length
+                const pct = Math.round((complete / updatedSummary.length) * 100 * 10) / 10
+                return { ...prev, complete, incomplete, pct_complete: pct }
+            })
+
         } catch (e) {
             showToast('❌ Failed to apply tag. Check backend.')
         }
@@ -507,16 +133,57 @@ export default function AutoTagging() {
     }
 
     const confColor = (c) => {
-        if (c >= 0.85) return '#6EE7B7'
-        if (c >= 0.75) return '#FCD34D'
-        return '#FC8181'
+        if (c >= 0.85) return C.green
+        if (c >= 0.75) return C.amber
+        return C.red
     }
 
-    const confBadge = (c) => {
-        if (c >= 0.85) return 'badge badge-green'
-        if (c >= 0.75) return 'badge badge-amber'
-        return 'badge badge-red'
+    const Badge = ({ type, children }) => {
+        const styles = {
+            green: { background: C.greenLight, color: C.greenText, border: `1px solid ${C.green}30` },
+            red: { background: C.redLight, color: C.redText, border: `1px solid ${C.red}30` },
+            amber: { background: C.amberLight, color: C.amberText, border: `1px solid ${C.amber}30` },
+            teal: { background: C.tealLight, color: C.tealText, border: `1px solid ${C.teal}30` },
+            blue: { background: '#DBEAFE', color: C.blue, border: `1px solid ${C.blue}30` },
+            purple: { background: C.purpleLight, color: C.purpleText, border: `1px solid ${C.purple}30` },
+        }
+        return (
+            <span style={{
+                ...styles[type] || styles.blue,
+                padding: '2px 10px',
+                borderRadius: 20,
+                fontSize: 12,
+                fontWeight: 600,
+                display: 'inline-block',
+            }}>{children}</span>
+        )
     }
+
+    const TagChip = ({ children }) => (
+        <span style={{
+            background: '#EFF6FF',
+            color: C.blue,
+            border: `1px solid #BFDBFE`,
+            padding: '3px 12px',
+            borderRadius: 8,
+            fontSize: 12,
+            fontWeight: 600,
+            fontFamily: 'monospace',
+        }}>{children}</span>
+    )
+
+    const InfoBox = ({ children, color = C.blue, bg, border }) => (
+        <div style={{
+            fontSize: 13,
+            color: color,
+            lineHeight: 1.7,
+            padding: '12px 16px',
+            background: bg || `${color}10`,
+            border: `1px solid ${border || color + '30'}`,
+            borderLeft: `3px solid ${color}`,
+            borderRadius: 8,
+        }}>{children}</div>
+    )
 
     if (loading) return <div className="loading"><div className="spinner" /> Loading tagging data...</div>
 
@@ -525,8 +192,7 @@ export default function AutoTagging() {
             <div className="page-header">
                 <h1 className="page-title">🏷️ Context-Based Auto-Tagging Engine</h1>
                 <p className="page-subtitle">
-                    Azure FinOps · Likhith Nariyam · AI infers missing Department and CostCenter tags
-                    from owner, service name, environment, and CPU signals
+                    Azure FinOps AI · Context-Based Auto-Tagging · Jan 2026 · 17 VMs
                 </p>
             </div>
 
@@ -570,14 +236,9 @@ export default function AutoTagging() {
                     <table>
                         <thead>
                             <tr>
-                                <th>Resource ID</th>
-                                <th>Department Tag</th>
-                                <th>Environment</th>
-                                <th>Cost Center</th>
-                                <th>Missing Tag</th>
-                                <th>AI Suggested Value</th>
-                                <th>Tag Status</th>
-                                <th>Shutdown Candidate</th>
+                                {['Resource ID', 'Department Tag', 'Environment', 'Cost Center', 'Missing Tag', 'AI Suggested Value', 'Tag Status', 'Shutdown Candidate'].map(h => (
+                                    <th key={h} style={{ color: C.textMid, background: '#F1F5F9', fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h}</th>
+                                ))}
                             </tr>
                         </thead>
                         <tbody>
@@ -586,46 +247,45 @@ export default function AutoTagging() {
                                     key={r.ResourceID}
                                     style={{
                                         cursor: 'pointer',
-                                        background: selectedVm === r.ResourceID ? 'rgba(124,58,237,0.1)' : ''
+                                        background: selectedVm === r.ResourceID ? 'rgba(99,102,241,0.07)' : '',
+                                        borderLeft: selectedVm === r.ResourceID ? `3px solid ${C.purple}` : '3px solid transparent',
                                     }}
                                     onClick={() => setSelectedVm(r.ResourceID)}
                                 >
                                     <td>
-                                        <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--blue-light)', fontWeight: 600 }}>
+                                        <span style={{ fontFamily: 'monospace', color: C.blue, fontWeight: 600 }}>
                                             {r.ResourceID}
                                         </span>
                                     </td>
-                                    <td>{r.DeptTag || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>— missing —</span>}</td>
-                                    <td><span className="badge badge-teal">{r.EnvTag}</span></td>
-                                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.CostCenterTag}</td>
+                                    <td style={{ color: C.text, fontSize: 13 }}>
+                                        {r.DeptTag
+                                            ? <span style={{ color: '#065F46', fontWeight: 600 }}>{r.DeptTag}</span>
+                                            : <span style={{ color: C.textMuted, fontStyle: 'italic' }}>— missing —</span>
+                                        }
+                                    </td>
+                                    <td><Badge type="teal">{r.EnvTag}</Badge></td>
+                                    <td style={{ fontFamily: 'monospace', fontSize: 12, color: C.textMid }}>{r.CostCenterTag}</td>
                                     <td>
                                         {r.MissingTag
-                                            ? <span style={{ color: '#FC8181', fontSize: 12, fontFamily: 'var(--font-mono)' }}>{r.MissingTag}</span>
-                                            : <span style={{ color: '#6EE7B7', fontSize: 12 }}>—</span>
+                                            ? <span style={{ color: C.red, fontSize: 12, fontFamily: 'monospace' }}>{r.MissingTag}</span>
+                                            : <span style={{ color: C.green, fontSize: 12 }}>—</span>
                                         }
                                     </td>
                                     <td>
-                                        {r.AI_SuggestedDept
-                                            ? <span className="tag-chip">{r.AI_SuggestedDept}</span>
-                                            : '—'
-                                        }
+                                        {r.AI_SuggestedDept ? <TagChip>{r.AI_SuggestedDept}</TagChip> : <span style={{ color: C.textMuted }}>—</span>}
                                     </td>
                                     <td>
-                                        <span className={r.TagStatus === 'Complete' ? 'badge badge-green' : 'badge badge-red'}>
-                                            {r.TagStatus}
-                                        </span>
+                                        <Badge type={r.TagStatus === 'Complete' ? 'green' : 'red'}>{r.TagStatus}</Badge>
                                     </td>
                                     <td>
-                                        <span className={r.ShutdownCandidate === 'Yes' ? 'badge badge-amber' : 'badge badge-teal'}>
-                                            {r.ShutdownCandidate}
-                                        </span>
+                                        <Badge type={r.ShutdownCandidate === 'Yes' ? 'amber' : 'teal'}>{r.ShutdownCandidate}</Badge>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 10 }}>
+                <p style={{ fontSize: 12, color: C.textMuted, marginTop: 10 }}>
                     👆 Click any row to see AI tag suggestion and drill-down
                 </p>
             </div>
@@ -659,13 +319,13 @@ export default function AutoTagging() {
                                 <tbody>
                                     {Object.entries(detail.resource_context)
                                         .filter(([k]) => !['__index__'].includes(k))
-                                        .map(([k, v]) => (
-                                            <tr key={k}>
-                                                <td style={{ color: 'var(--text-muted)', fontSize: 12, width: 160 }}>{k}</td>
-                                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>
-                                                    {k === 'comp'
-                                                        ? <span className={v === 'Compliant' ? 'badge badge-green' : 'badge badge-red'}>{v}</span>
-                                                        : String(v) || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>—</span>
+                                        .map(([k, v], i) => (
+                                            <tr key={k} style={{ background: i % 2 === 0 ? C.bgRow : C.bgCard }}>
+                                                <td style={{ color: C.textMuted, fontSize: 12, width: 180, fontWeight: 500 }}>{k}</td>
+                                                <td style={{ fontFamily: 'monospace', fontSize: 12, color: C.text }}>
+                                                    {k === 'PolicyCompliance' || k === 'comp'
+                                                        ? <Badge type={v === 'Compliant' ? 'green' : 'red'}>{v}</Badge>
+                                                        : String(v) || <span style={{ color: C.textMuted, fontStyle: 'italic' }}>—</span>
                                                     }
                                                 </td>
                                             </tr>
@@ -682,48 +342,54 @@ export default function AutoTagging() {
                         <div className="card">
                             <div className="card-title">🧠 Tag Decision</div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>Department</span>
-                                    <span className="tag-chip">{detail.suggested_department}</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: C.bgRow, borderRadius: 8, border: `1px solid ${C.border}` }}>
+                                    <span style={{ color: C.textMid, fontSize: 13, fontWeight: 500 }}>Department</span>
+                                    <TagChip>{detail.suggested_department}</TagChip>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>Cost Center</span>
-                                    <span className="tag-chip">{detail.suggested_cost_center}</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: C.bgRow, borderRadius: 8, border: `1px solid ${C.border}` }}>
+                                    <span style={{ color: C.textMid, fontSize: 13, fontWeight: 500 }}>Cost Center</span>
+                                    <TagChip>{detail.suggested_cost_center}</TagChip>
                                 </div>
                             </div>
 
                             {/* Confidence */}
                             <div style={{ marginTop: 16 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Confidence (System)</span>
-                                    <span className={confBadge(detail.confidence)}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, alignItems: 'center' }}>
+                                    <span style={{ fontSize: 12, color: C.textMuted, fontWeight: 500 }}>Confidence Score</span>
+                                    <span style={{
+                                        background: confColor(detail.confidence) + '20',
+                                        color: confColor(detail.confidence),
+                                        border: `1px solid ${confColor(detail.confidence)}40`,
+                                        padding: '2px 10px', borderRadius: 20,
+                                        fontSize: 12, fontWeight: 700,
+                                    }}>
                                         {Math.round(detail.confidence * 100)}%
                                     </span>
                                 </div>
-                                <div className="progress-bar">
-                                    <div className="progress-fill" style={{
+                                <div style={{ height: 8, background: '#E2E8F0', borderRadius: 4, overflow: 'hidden' }}>
+                                    <div style={{
                                         width: `${detail.confidence * 100}%`,
+                                        height: '100%',
                                         background: confColor(detail.confidence),
+                                        borderRadius: 4,
+                                        transition: 'width 0.5s ease',
                                     }} />
                                 </div>
                             </div>
 
                             {/* Confidence Breakdown */}
                             <div style={{ marginTop: 14 }}>
-                                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                                <div style={{ fontSize: 12, color: C.textMuted, fontWeight: 600, marginBottom: 8 }}>
                                     🧮 Confidence Breakdown
                                 </div>
-                                <div className="conf-breakdown">
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                     {Object.entries(detail.confidence_breakdown).map(([key, val]) => (
-                                        <div className="conf-row" key={key}>
-                                            <span className="conf-key">{key}</span>
-                                            <div className="progress-bar" style={{ flex: 1 }}>
-                                                <div className="progress-fill" style={{
-                                                    width: `${val * 100}%`,
-                                                    background: 'var(--blue)',
-                                                }} />
+                                        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                            <span style={{ fontSize: 11, color: C.textMid, width: 90, flexShrink: 0 }}>{key}</span>
+                                            <div style={{ flex: 1, height: 6, background: '#E2E8F0', borderRadius: 3, overflow: 'hidden' }}>
+                                                <div style={{ width: `${val * 100}%`, height: '100%', background: C.blue, borderRadius: 3 }} />
                                             </div>
-                                            <span className="conf-pct">{Math.round(val * 100)}%</span>
+                                            <span style={{ fontSize: 11, color: C.textMid, width: 32, textAlign: 'right' }}>{Math.round(val * 100)}%</span>
                                         </div>
                                     ))}
                                 </div>
@@ -733,12 +399,20 @@ export default function AutoTagging() {
                         {/* Signals */}
                         <div className="card">
                             <div className="card-title">🔎 Signals Used</div>
-                            <div className="json-box">
+                            <div style={{
+                                background: '#1E293B',
+                                borderRadius: 8,
+                                padding: '12px 16px',
+                                fontFamily: 'monospace',
+                                fontSize: 12,
+                                lineHeight: 1.8,
+                                color: '#E2E8F0',
+                            }}>
                                 {'{'}
                                 {Object.entries(detail.signals_used).map(([k, v]) => (
-                                    <div key={k} style={{ paddingLeft: 12 }}>
+                                    <div key={k} style={{ paddingLeft: 16 }}>
                                         <span style={{ color: '#F6C90E' }}>"{k}"</span>
-                                        {' : '}
+                                        <span style={{ color: '#E2E8F0' }}> : </span>
                                         <span style={{ color: '#98C379' }}>"{v}"</span>
                                     </div>
                                 ))}
@@ -755,65 +429,46 @@ export default function AutoTagging() {
                         {/* Reasoning */}
                         <div className="card">
                             <div className="card-title">📝 Reasoning</div>
-                            <div className="explanation-box">{detail.reasoning}</div>
+                            <InfoBox color={C.textMid} bg="#F8FAFC" border={C.border}>
+                                {detail.reasoning}
+                            </InfoBox>
                         </div>
 
                         {/* Alternative + Action */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                             <div className="card">
                                 <div className="card-title">🔄 Alternative</div>
-                                <div className="explanation-box" style={{ background: 'rgba(124,58,237,0.07)', borderColor: 'rgba(124,58,237,0.2)' }}>
+                                <InfoBox color={C.purpleText} bg={C.purpleLight} border={C.purple + '40'}>
                                     {detail.alternative}
-                                </div>
+                                </InfoBox>
                             </div>
                             <div className="card">
                                 <div className="card-title">⚡ Action</div>
-                                <div className="explanation-box" style={{ background: 'rgba(5,150,105,0.07)', borderColor: 'rgba(5,150,105,0.2)' }}>
+                                <InfoBox color={C.greenText} bg={C.greenLight} border={C.green + '40'}>
                                     {detail.action}
-                                </div>
+                                </InfoBox>
                             </div>
                         </div>
                     </div>
 
-                    {/* ── NEW: AI Recommended Action (mentor requirement) ── */}
                     {detail.recommended_action && (
                         <div className="card mb-28">
                             <div className="card-title">🤖 AI Recommended Action</div>
-                            <div className="explanation-box" style={{
-                                background: 'rgba(46,117,182,0.07)',
-                                borderColor: 'rgba(46,117,182,0.35)',
-                                borderLeft: '3px solid var(--blue)',
-                                fontStyle: 'normal',
-                                lineHeight: 1.8,
-                                fontSize: 14,
-                            }}>
+                            <InfoBox color={C.blue} bg="#EFF6FF" border="#BFDBFE">
                                 {detail.recommended_action}
-                            </div>
-                            <p style={{
-                                fontSize: 11,
-                                color: 'var(--text-muted)',
-                                marginTop: 8,
-                                fontStyle: 'italic',
-                            }}>
+                            </InfoBox>
+                            <p style={{ fontSize: 11, color: C.textMuted, marginTop: 8, fontStyle: 'italic' }}>
                                 ⚠️ AI suggests — FinOps team approves. Owner verification is required before any tag is applied.
                             </p>
                         </div>
                     )}
 
-                    {/* ── NEW: Business Impact (mentor requirement) ── */}
                     {detail.business_impact && (
                         <div className="card mb-28">
                             <div className="card-title">💰 Business Impact</div>
-                            <div className="explanation-box" style={{
-                                background: 'rgba(5,150,105,0.07)',
-                                borderColor: 'rgba(5,150,105,0.3)',
-                                borderLeft: '3px solid #059669',
-                                fontStyle: 'normal',
-                                lineHeight: 1.8,
-                                fontSize: 14,
-                            }}>
+                            <InfoBox color={C.greenText} bg={C.greenLight} border={C.green + '40'}>
                                 {detail.business_impact}
-                            </div>
+                            </InfoBox>
                         </div>
                     )}
 
@@ -828,7 +483,6 @@ export default function AutoTagging() {
                             >
                                 🚀 Apply DepartmentTag={detail.suggested_department}
                             </button>
-
                             <button
                                 className="btn btn-green"
                                 onClick={() => handleApplyTag('CostCenterTag', detail.suggested_cost_center)}
@@ -836,33 +490,25 @@ export default function AutoTagging() {
                             >
                                 ✅ Apply CostCenterTag={detail.suggested_cost_center}
                             </button>
-
                             <button className="btn btn-purple" onClick={handleBulkApprove}>
                                 🔄 Bulk Approve All ≥85% Confidence
                             </button>
-
-                            <a
-                                className="btn btn-ghost"
-                                href={exportTaggingUrl()}
-                                download="tagging_report.csv"
-                            >
+                            <a className="btn btn-ghost" href={exportTaggingUrl()} download="tagging_report.csv">
                                 📥 Export Tagging Report CSV
                             </a>
                         </div>
-
                         {applied['DepartmentTag'] && (
-                            <div className="action-result" style={{ marginTop: 12 }}>
+                            <div style={{ marginTop: 12, padding: '8px 14px', background: C.greenLight, border: `1px solid ${C.green}40`, borderRadius: 8, fontSize: 13, color: C.greenText }}>
                                 ✅ DepartmentTag = <strong>{applied['DepartmentTag']}</strong> applied to {selectedVm}
                             </div>
                         )}
                         {applied['CostCenterTag'] && (
-                            <div className="action-result">
+                            <div style={{ marginTop: 8, padding: '8px 14px', background: C.greenLight, border: `1px solid ${C.green}40`, borderRadius: 8, fontSize: 13, color: C.greenText }}>
                                 ✅ CostCenterTag = <strong>{applied['CostCenterTag']}</strong> applied to {selectedVm}
                             </div>
                         )}
                     </div>
 
-                    {/* Bulk approve result */}
                     {bulkResult && (
                         <div className="card mb-28">
                             <div className="card-title">🔄 Bulk Approve Results — {bulkResult.approved_count} tags approved</div>
@@ -870,21 +516,19 @@ export default function AutoTagging() {
                                 <table>
                                     <thead>
                                         <tr>
-                                            <th>Resource ID</th>
-                                            <th>Missing Tag</th>
-                                            <th>Suggested Value</th>
-                                            <th>Confidence</th>
-                                            <th>Reason</th>
+                                            {['Resource ID', 'Missing Tag', 'Suggested Value', 'Confidence', 'Reason'].map(h => (
+                                                <th key={h} style={{ color: C.textMid, background: '#F1F5F9', fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h}</th>
+                                            ))}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {bulkResult.approved.map((r, i) => (
                                             <tr key={i}>
-                                                <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--blue-light)' }}>{r.ResourceID}</td>
-                                                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.MissingTag}</td>
-                                                <td><span className="tag-chip">{r.SuggestedValue}</span></td>
-                                                <td><span className="badge badge-green">{Math.round(r.Confidence * 100)}%</span></td>
-                                                <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{r.Reason}</td>
+                                                <td style={{ fontFamily: 'monospace', color: C.blue, fontWeight: 600 }}>{r.ResourceID}</td>
+                                                <td style={{ fontFamily: 'monospace', fontSize: 12, color: C.textMid }}>{r.MissingTag}</td>
+                                                <td><TagChip>{r.SuggestedValue}</TagChip></td>
+                                                <td><Badge type="green">{Math.round(r.Confidence * 100)}%</Badge></td>
+                                                <td style={{ fontSize: 12, color: C.textMid }}>{r.Reason}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -893,30 +537,27 @@ export default function AutoTagging() {
                         </div>
                     )}
 
-                    {/* System evaluation */}
+                    {/* System Evaluation */}
                     <div className="card">
                         <div className="card-title">📊 System Evaluation Dashboard</div>
                         {kpis && (
                             <div className="grid-3">
                                 {[
-                                    { label: 'Total VMs Analysed', val: kpis.total_vms, color: 'var(--text)' },
-                                    { label: 'Tags Completed', val: kpis.complete, color: '#6EE7B7' },
-                                    { label: 'Tags Still Missing', val: kpis.incomplete, color: '#FC8181' },
-                                    { label: 'Completion Rate', val: kpis.pct_complete + '%', color: 'var(--blue-xlight)' },
-                                    { label: 'High Confidence (≥85%)', val: '7 suggestions', color: '#6EE7B7' },
-                                    { label: 'Est. Cost Unattributed', val: 'Unknown', color: '#FCD34D' },
+                                    { label: 'Total VMs Analysed', val: kpis.total_vms, color: C.text },
+                                    { label: 'Tags Completed', val: kpis.complete, color: C.greenText },
+                                    { label: 'Tags Still Missing', val: kpis.incomplete, color: C.redText },
+                                    { label: 'Completion Rate', val: kpis.pct_complete + '%', color: C.blue },
+                                    { label: 'High Confidence (≥85%)', val: '7 suggestions', color: C.greenText },
+                                    { label: 'Est. Cost Unattributed', val: 'Unknown', color: C.amberText },
                                 ].map(({ label, val, color }) => (
                                     <div key={label} style={{
-                                        background: 'rgba(255,255,255,0.03)',
-                                        borderRadius: 'var(--radius-sm)',
+                                        background: C.bgRow,
+                                        borderRadius: 8,
                                         padding: 16,
-                                        border: '1px solid var(--border)',
+                                        border: `1px solid ${C.border}`,
                                     }}>
-                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>{label}</div>
-                                        <div style={{
-                                            fontSize: 22, fontFamily: 'var(--font-display)',
-                                            fontWeight: 800, color,
-                                        }}>{val}</div>
+                                        <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 6, fontWeight: 500 }}>{label}</div>
+                                        <div style={{ fontSize: 22, fontWeight: 800, color }}>{val}</div>
                                     </div>
                                 ))}
                             </div>
