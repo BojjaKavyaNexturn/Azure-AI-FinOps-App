@@ -1,7 +1,9 @@
+
+
 # import pandas as pd
 # import numpy as np
 
-# # ── Static anomaly metadata ──────────────────────────────────────────────────
+# # ── Static anomaly metadata (confidence will be computed from data) ──────────
 # ANOMALY_META = {
 #     "vm-05": {
 #         "flag":        "COST_SPIKE_NO_CPU",
@@ -9,7 +11,6 @@
 #         "severity":    "HIGH",
 #         "dates":       "Jan 03–05, 2026",
 #         "saving":      420,
-#         "confidence":  0.94,
 #         "explanation": (
 #             "Between Jan 03–05, vm-05 billing cost jumped 3× (from ~$1.20/hr to ~$5.40/hr) "
 #             "while CPU utilisation stayed completely flat. Network traffic surged to 900+ MB. "
@@ -27,7 +28,6 @@
 #         "severity":    "HIGH",
 #         "dates":       "Jan 03–04, 2026",
 #         "saving":      310,
-#         "confidence":  0.91,
 #         "explanation": (
 #             "vm-09 was running at ~72% CPU across 192 intervals on Jan 03–04 "
 #             "but the billing pipeline recorded $0.00 for those hours. "
@@ -45,7 +45,6 @@
 #         "severity":    "MEDIUM",
 #         "dates":       "Jan 01–30, 2026 (full month)",
 #         "saving":      390,
-#         "confidence":  0.90,
 #         "explanation": (
 #             "vm-12 shows a consistent 8% cost increase every week across January. "
 #             "Memory utilisation is also slowly creeping upward at ~0.9% per day. "
@@ -63,7 +62,6 @@
 #         "severity":    "MEDIUM",
 #         "dates":       "Jan 01, 02, 06, 11, 16",
 #         "saving":      280,
-#         "confidence":  0.88,
 #         "explanation": (
 #             "On 5 specific dates in January, vm-07 was billed at full pay-as-you-go rate "
 #             "instead of the Reserved Instance discounted rate — a 40% cost overrun. "
@@ -81,7 +79,6 @@
 #         "severity":    "HIGH",
 #         "dates":       "Post Jan 04, 2026",
 #         "saving":      480,
-#         "confidence":  0.92,
 #         "explanation": (
 #             "Activity_Logs shows vm-06 was resized from D4s_v5 → B2s at 02:15 on Jan 04, "
 #             "followed immediately by a restart. CPU dropped to 2.1% at the reboot moment "
@@ -95,9 +92,101 @@
 #     },
 # }
 
+# # ── Confidence cache (populated on first call) ───────────────────────────────
+# _confidence_cache = {}
+
+
+# def compute_confidence(bd, pm, vm_id: str) -> float:
+#     """
+#     Compute real statistical confidence for each anomaly type using Z-score.
+#     Returns a float between 0.0 and 1.0.
+#     """
+#     try:
+#         meta = ANOMALY_META[vm_id]
+#         flag = meta["flag"]
+#         vm_bd = bd[bd["ResourceID"] == vm_id].copy()
+#         vm_pm = pm[pm["ResourceID"] == vm_id].copy()
+
+#         if flag == "COST_SPIKE_NO_CPU":
+#             # Z-score of peak cost vs all VMs average cost
+#             all_costs = bd.groupby("ResourceID")["CostUSD"].mean()
+#             vm_mean = all_costs[vm_id]
+#             pop_mean = all_costs.mean()
+#             pop_std = all_costs.std()
+#             z = abs(vm_mean - pop_mean) / (pop_std + 1e-9)
+#             # Normalize z to confidence: z=2 → ~0.90, z=3 → ~0.95, z=4 → ~0.99
+#             confidence = min(0.999, 0.5 + 0.5 * (1 - np.exp(-z / 2)))
+
+#         elif flag == "ORPHANED_ACTIVE_NO_BILLING":
+#             # % of hours with CPU > 10% but CostUSD == 0
+#             bd_vm = vm_bd.set_index("Timestamp").resample("h")["CostUSD"].sum()
+#             pm_vm = vm_pm.set_index("Timestamp").resample("h")["CPU_Percent"].mean()
+#             merged = pd.concat([bd_vm, pm_vm], axis=1).dropna()
+#             merged.columns = ["cost", "cpu"]
+#             orphaned = merged[(merged["cpu"] > 10) & (merged["cost"] == 0)]
+#             ratio = len(orphaned) / (len(merged) + 1e-9)
+#             confidence = min(0.999, 0.5 + ratio * 2)
+
+#         elif flag == "GRADUAL_COST_CREEP":
+#             # R² of linear regression on weekly costs — higher R² = more confident trend
+#             vm_bd = vm_bd.copy()
+#             vm_bd["Week"] = vm_bd["Timestamp"].dt.isocalendar().week.astype(int)
+#             weekly = vm_bd.groupby("Week")["CostUSD"].mean()
+#             if len(weekly) < 2:
+#                 return 0.80
+#             x = np.arange(len(weekly))
+#             y = weekly.values
+#             corr = np.corrcoef(x, y)[0, 1]
+#             r_squared = corr ** 2
+#             confidence = min(0.999, 0.75 + r_squared * 0.24)
+
+#         elif flag == "RESERVATION_NOT_APPLIED":
+#             # % of rows where ReservationApplied == No vs all rows for this VM
+#             no_res = vm_bd[vm_bd["ReservationApplied"] == "No"]
+#             ratio = len(no_res) / (len(vm_bd) + 1e-9)
+#             # Cost difference between No vs Yes rows
+#             cost_no  = vm_bd[vm_bd["ReservationApplied"] == "No"]["CostUSD"].mean()
+#             cost_yes = vm_bd[vm_bd["ReservationApplied"] == "Yes"]["CostUSD"].mean()
+#             cost_diff_ratio = abs(cost_no - cost_yes) / (cost_yes + 1e-9)
+#             confidence = min(0.999, 0.6 + ratio * 0.2 + min(cost_diff_ratio, 0.2))
+
+#         elif flag == "RESIZE_NO_COST_DROP":
+#             # Compare avg cost before vs after Jan 04
+#             vm_bd["Timestamp"] = pd.to_datetime(vm_bd["Timestamp"])
+#             cutoff = pd.Timestamp("2026-01-04")
+#             before = vm_bd[vm_bd["Timestamp"] < cutoff]["CostUSD"].mean()
+#             after  = vm_bd[vm_bd["Timestamp"] >= cutoff]["CostUSD"].mean()
+#             # If cost didn't drop after resize, high confidence anomaly
+#             if before > 0:
+#                 drop_ratio = (before - after) / before
+#                 # drop_ratio close to 0 = cost stayed same = high confidence anomaly
+#                 confidence = min(0.999, 0.70 + (1 - abs(drop_ratio)) * 0.29)
+#             else:
+#                 confidence = 0.80
+#         else:
+#             confidence = 0.80
+
+#         return round(float(confidence), 4)
+
+#     except Exception as e:
+#         print(f"[confidence] Error computing for {vm_id}: {e}")
+#         # Fallback to reasonable defaults per severity
+#         severity = ANOMALY_META.get(vm_id, {}).get("severity", "MEDIUM")
+#         return 0.92 if severity == "HIGH" else 0.85
+
+
+# def get_confidence(bd, pm, vm_id: str) -> float:
+#     """Return cached confidence or compute fresh."""
+#     if vm_id not in _confidence_cache:
+#         _confidence_cache[vm_id] = compute_confidence(bd, pm, vm_id)
+#     return _confidence_cache[vm_id]
+
 
 # def get_summary():
-#     """Return summary of all 5 anomalies."""
+#     """Return summary of all 5 anomalies — confidence computed lazily."""
+#     from services.data_loader import get_bd, get_pm
+#     bd = get_bd()
+#     pm = get_pm()
 #     return [
 #         {
 #             "vm_id":      vm,
@@ -106,7 +195,7 @@
 #             "severity":   m["severity"],
 #             "dates":      m["dates"],
 #             "saving":     m["saving"],
-#             "confidence": m["confidence"],
+#             "confidence": get_confidence(bd, pm, vm),
 #             "owner":      m["owner"],
 #         }
 #         for vm, m in ANOMALY_META.items()
@@ -118,48 +207,49 @@
 #     high_count   = sum(1 for m in ANOMALY_META.values() if m["severity"] == "HIGH")
 #     medium_count = sum(1 for m in ANOMALY_META.values() if m["severity"] == "MEDIUM")
 #     return {
-#         "total_anomaly_types":   len(ANOMALY_META),
-#         "high_severity":         high_count,
-#         "medium_severity":       medium_count,
+#         "total_anomaly_types":    len(ANOMALY_META),
+#         "high_severity":          high_count,
+#         "medium_severity":        medium_count,
 #         "estimated_monthly_loss": total_saving,
-#         "vms_affected":          len(ANOMALY_META),
-#         "total_vms":             17,
+#         "vms_affected":           len(ANOMALY_META),
+#         "total_vms":              17,
 #     }
 
 
 # def get_detail(vm_id: str):
-#     """Return full detail for one VM anomaly."""
+#     """Return full detail for one VM anomaly with computed confidence."""
 #     if vm_id not in ANOMALY_META:
 #         return None
-#     return ANOMALY_META[vm_id]
+#     from services.data_loader import get_bd, get_pm
+#     bd = get_bd()
+#     pm = get_pm()
+#     detail = dict(ANOMALY_META[vm_id])
+#     detail["confidence"] = get_confidence(bd, pm, vm_id)
+#     return detail
 
 
 # def get_flagged_billing(bd, vm_id: str):
-#     """Return flagged billing rows for a VM."""
-#     df = bd[(bd["ResourceID"] == vm_id) & (bd["AnomalyFlag"] != "")].copy()
+#     df = bd[(bd["ResourceID"] == vm_id)].copy()
+#     df["AnomalyFlag"] = df["AnomalyFlag"].fillna("").astype(str)
+#     df = df[df["AnomalyFlag"].str.strip() != ""]
 #     df["Timestamp"] = df["Timestamp"].astype(str)
 #     return df[["ResourceID","Timestamp","CostUSD","ReservationApplied","AnomalyFlag"]].to_dict("records")
 
 
 # def get_flagged_metrics(pm, vm_id: str):
-#     """Return flagged metric rows for a VM."""
-#     df = pm[(pm["ResourceID"] == vm_id) & (pm["AnomalyFlag"] != "")].copy()
+#     df = pm[(pm["ResourceID"] == vm_id)].copy()
+#     df["AnomalyFlag"] = df["AnomalyFlag"].fillna("").astype(str)
+#     df = df[df["AnomalyFlag"].str.strip() != ""]
 #     df["Timestamp"] = df["Timestamp"].astype(str)
 #     return df[["ResourceID","Timestamp","CPU_Percent","Memory_Percent",
 #                "NetworkIn_MB","NetworkOut_MB","AnomalyFlag"]].to_dict("records")
 
 
 # def get_chart_data(pm, bd, vm_id: str):
-#     """Return chart-ready time series data for a VM."""
 #     pm_vm = pm[pm["ResourceID"] == vm_id].copy()
 #     bd_vm = bd[bd["ResourceID"] == vm_id].copy()
-
-#     # Hourly resample for billing
 #     bd_vm = bd_vm.set_index("Timestamp").resample("h")["CostUSD"].mean().reset_index()
-
-#     # 15-min for metrics — sample every 4th row to keep payload small
 #     pm_vm = pm_vm.iloc[::4].copy()
-
 #     return {
 #         "billing": {
 #             "timestamps": bd_vm["Timestamp"].astype(str).tolist(),
@@ -176,7 +266,6 @@
 
 
 # def get_weekly_cost(bd, vm_id: str):
-#     """Weekly average cost for gradual creep chart."""
 #     bd_vm = bd[bd["ResourceID"] == vm_id].copy()
 #     bd_vm["Week"] = bd_vm["Timestamp"].dt.isocalendar().week.astype(int)
 #     weekly = bd_vm.groupby("Week")["CostUSD"].mean().round(4).reset_index()
@@ -186,11 +275,12 @@
 #     }
 
 
-
 import pandas as pd
 import numpy as np
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
 
-# ── Static anomaly metadata (confidence will be computed from data) ──────────
+# ── Static anomaly metadata ───────────────────────────────────────────────────
 ANOMALY_META = {
     "vm-05": {
         "flag":        "COST_SPIKE_NO_CPU",
@@ -279,98 +369,264 @@ ANOMALY_META = {
     },
 }
 
-# ── Confidence cache (populated on first call) ───────────────────────────────
-_confidence_cache = {}
+# ── ML model cache ────────────────────────────────────────────────────────────
+# Stores trained Isolation Forest model + scaler per VM
+# Populated on first call, reused on subsequent calls
+_model_cache    = {}   # vm_id → IsolationForest model
+_scaler_cache   = {}   # vm_id → StandardScaler
+_confidence_cache = {} # vm_id → float confidence score
+
+# Features used for Isolation Forest training
+# These 5 columns capture cost, compute, and network behaviour together
+FEATURES = ["CostUSD", "CPU_Percent", "Memory_Percent", "NetworkOut_MB", "NetworkIn_MB"]
 
 
-def compute_confidence(bd, pm, vm_id: str) -> float:
+def _prepare_features(bd: pd.DataFrame, pm: pd.DataFrame, vm_id: str) -> pd.DataFrame:
     """
-    Compute real statistical confidence for each anomaly type using Z-score.
-    Returns a float between 0.0 and 1.0.
+    Join billing and metrics for a single VM on hourly timestamps.
+    Returns a DataFrame with FEATURES columns, NaN-filled with median.
     """
-    try:
-        meta = ANOMALY_META[vm_id]
-        flag = meta["flag"]
-        vm_bd = bd[bd["ResourceID"] == vm_id].copy()
-        vm_pm = pm[pm["ResourceID"] == vm_id].copy()
+    # Filter to this VM
+    vm_bd = bd[bd["ResourceID"] == vm_id].copy()
+    vm_pm = pm[pm["ResourceID"] == vm_id].copy()
 
-        if flag == "COST_SPIKE_NO_CPU":
-            # Z-score of peak cost vs all VMs average cost
-            all_costs = bd.groupby("ResourceID")["CostUSD"].mean()
-            vm_mean = all_costs[vm_id]
-            pop_mean = all_costs.mean()
-            pop_std = all_costs.std()
-            z = abs(vm_mean - pop_mean) / (pop_std + 1e-9)
-            # Normalize z to confidence: z=2 → ~0.90, z=3 → ~0.95, z=4 → ~0.99
-            confidence = min(0.999, 0.5 + 0.5 * (1 - np.exp(-z / 2)))
+    # Aggregate metrics to hourly to match billing resolution
+    vm_pm["hour"] = pd.to_datetime(vm_pm["Timestamp"]).dt.floor("h")
+    vm_pm_hourly = vm_pm.groupby("hour").agg(
+        CPU_Percent    = ("CPU_Percent",    "mean"),
+        Memory_Percent = ("Memory_Percent", "mean"),
+        NetworkIn_MB   = ("NetworkIn_MB",   "sum"),
+        NetworkOut_MB  = ("NetworkOut_MB",  "sum"),
+    ).reset_index()
 
-        elif flag == "ORPHANED_ACTIVE_NO_BILLING":
-            # % of hours with CPU > 10% but CostUSD == 0
-            bd_vm = vm_bd.set_index("Timestamp").resample("h")["CostUSD"].sum()
-            pm_vm = vm_pm.set_index("Timestamp").resample("h")["CPU_Percent"].mean()
-            merged = pd.concat([bd_vm, pm_vm], axis=1).dropna()
-            merged.columns = ["cost", "cpu"]
-            orphaned = merged[(merged["cpu"] > 10) & (merged["cost"] == 0)]
-            ratio = len(orphaned) / (len(merged) + 1e-9)
-            confidence = min(0.999, 0.5 + ratio * 2)
+    # Align billing to hourly
+    vm_bd["hour"] = pd.to_datetime(vm_bd["Timestamp"]).dt.floor("h")
+    vm_bd_hourly = vm_bd.groupby("hour")["CostUSD"].sum().reset_index()
 
-        elif flag == "GRADUAL_COST_CREEP":
-            # R² of linear regression on weekly costs — higher R² = more confident trend
-            vm_bd = vm_bd.copy()
-            vm_bd["Week"] = vm_bd["Timestamp"].dt.isocalendar().week.astype(int)
-            weekly = vm_bd.groupby("Week")["CostUSD"].mean()
-            if len(weekly) < 2:
-                return 0.80
-            x = np.arange(len(weekly))
-            y = weekly.values
-            corr = np.corrcoef(x, y)[0, 1]
-            r_squared = corr ** 2
-            confidence = min(0.999, 0.75 + r_squared * 0.24)
+    # Join on hour
+    merged = vm_bd_hourly.merge(vm_pm_hourly, on="hour", how="left")
 
-        elif flag == "RESERVATION_NOT_APPLIED":
-            # % of rows where ReservationApplied == No vs all rows for this VM
-            no_res = vm_bd[vm_bd["ReservationApplied"] == "No"]
-            ratio = len(no_res) / (len(vm_bd) + 1e-9)
-            # Cost difference between No vs Yes rows
-            cost_no  = vm_bd[vm_bd["ReservationApplied"] == "No"]["CostUSD"].mean()
-            cost_yes = vm_bd[vm_bd["ReservationApplied"] == "Yes"]["CostUSD"].mean()
-            cost_diff_ratio = abs(cost_no - cost_yes) / (cost_yes + 1e-9)
-            confidence = min(0.999, 0.6 + ratio * 0.2 + min(cost_diff_ratio, 0.2))
-
-        elif flag == "RESIZE_NO_COST_DROP":
-            # Compare avg cost before vs after Jan 04
-            vm_bd["Timestamp"] = pd.to_datetime(vm_bd["Timestamp"])
-            cutoff = pd.Timestamp("2026-01-04")
-            before = vm_bd[vm_bd["Timestamp"] < cutoff]["CostUSD"].mean()
-            after  = vm_bd[vm_bd["Timestamp"] >= cutoff]["CostUSD"].mean()
-            # If cost didn't drop after resize, high confidence anomaly
-            if before > 0:
-                drop_ratio = (before - after) / before
-                # drop_ratio close to 0 = cost stayed same = high confidence anomaly
-                confidence = min(0.999, 0.70 + (1 - abs(drop_ratio)) * 0.29)
-            else:
-                confidence = 0.80
+    # Fill missing values with median (handles NaN from join gaps)
+    for col in FEATURES:
+        if col in merged.columns:
+            merged[col] = merged[col].fillna(merged[col].median())
         else:
-            confidence = 0.80
+            merged[col] = 0.0
 
-        return round(float(confidence), 4)
+    return merged[FEATURES].fillna(0.0)
+
+
+def _train_isolation_forest(X: pd.DataFrame) -> tuple:
+    """
+    Train Isolation Forest on feature matrix X.
+    contamination=0.05 means we expect ~5% of rows to be anomalies.
+    Returns (trained_model, fitted_scaler).
+    """
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    model = IsolationForest(
+        n_estimators=100,   # 100 trees — good balance of accuracy vs speed
+        contamination=0.05, # expect ~5% anomaly rows
+        random_state=42,    # reproducible results
+        n_jobs=-1,          # use all CPU cores
+    )
+    model.fit(X_scaled)
+    return model, scaler
+
+
+# def compute_confidence(bd: pd.DataFrame, pm: pd.DataFrame, vm_id: str) -> float:
+#     """
+#     Compute confidence score for a VM's anomaly using Isolation Forest.
+
+#     How it works:
+#     1. Prepare hourly feature matrix (Cost, CPU, Memory, Network)
+#     2. Train Isolation Forest on ALL rows for this VM
+#     3. Get anomaly scores for flagged rows (rows with AnomalyFlag set)
+#     4. Convert average anomaly score to confidence percentage
+
+#     Isolation Forest score range: -1 (very anomalous) to 0 (borderline) to 1 (normal)
+#     We invert and normalize to get confidence: more anomalous = higher confidence
+
+#     Returns float between 0.0 and 1.0
+#     """
+#     try:
+#         # Prepare feature matrix
+#         X = _prepare_features(bd, pm, vm_id)
+
+#         if len(X) < 10:
+#             # Not enough data to train — return reasonable default
+#             severity = ANOMALY_META.get(vm_id, {}).get("severity", "MEDIUM")
+#             return 0.92 if severity == "HIGH" else 0.85
+
+#         # Train model (or use cached)
+#         if vm_id not in _model_cache:
+#             model, scaler = _train_isolation_forest(X)
+#             _model_cache[vm_id]  = model
+#             _scaler_cache[vm_id] = scaler
+#         else:
+#             model  = _model_cache[vm_id]
+#             scaler = _scaler_cache[vm_id]
+
+#         # Get anomaly scores for all rows
+#         X_scaled = scaler.transform(X)
+#         scores   = model.score_samples(X_scaled)  # range: -1 to 0 roughly
+
+#         # Get scores for anomalous rows specifically
+#         # Isolation Forest: score < -0.1 = anomalous
+#         anomaly_scores = scores[scores < -0.1]
+
+#         if len(anomaly_scores) == 0:
+#             # Model found no anomalies — use overall minimum score
+#             anomaly_scores = np.array([scores.min()])
+
+#         # Convert average anomaly score to confidence
+#         # Score of -1.0 → confidence ~0.99
+#         # Score of -0.5 → confidence ~0.92
+#         # Score of -0.1 → confidence ~0.80
+#         avg_score  = float(np.mean(anomaly_scores))
+#         confidence = min(0.999, max(0.75, 0.5 + abs(avg_score) * 0.5))
+
+#         return round(confidence, 4)
+
+#     except Exception as e:
+#         print(f"[IsolationForest] Error for {vm_id}: {e}")
+#         severity = ANOMALY_META.get(vm_id, {}).get("severity", "MEDIUM")
+#         return 0.92 if severity == "HIGH" else 0.85
+def compute_confidence(bd: pd.DataFrame, pm: pd.DataFrame, vm_id: str) -> float:
+    try:
+        X = _prepare_features(bd, pm, vm_id)
+
+        if len(X) < 10:
+            severity = ANOMALY_META.get(vm_id, {}).get("severity", "MEDIUM")
+            return 0.92 if severity == "HIGH" else 0.85
+
+        if vm_id not in _model_cache:
+            model, scaler = _train_isolation_forest(X)
+            _model_cache[vm_id]  = model
+            _scaler_cache[vm_id] = scaler
+        else:
+            model  = _model_cache[vm_id]
+            scaler = _scaler_cache[vm_id]
+
+        X_scaled = scaler.transform(X)
+        scores   = model.score_samples(X_scaled)
+
+        # Get scores for anomalous rows
+        anomaly_scores = scores[scores < -0.1]
+        if len(anomaly_scores) == 0:
+            anomaly_scores = np.array([scores.min()])
+
+        avg_score = float(np.mean(anomaly_scores))
+
+        # ── FIXED: proper mapping from IF score to confidence ──
+        # IF scores for anomalies typically range -0.6 to -0.05
+        # Map this to confidence range 0.78 to 0.97
+        normalized = (abs(avg_score) - 0.05) / (0.6 - 0.05)
+        normalized = float(np.clip(normalized, 0.0, 1.0))
+        confidence = round(0.78 + normalized * 0.19, 4)
+
+        return confidence
 
     except Exception as e:
-        print(f"[confidence] Error computing for {vm_id}: {e}")
-        # Fallback to reasonable defaults per severity
+        print(f"[IsolationForest] Error for {vm_id}: {e}")
         severity = ANOMALY_META.get(vm_id, {}).get("severity", "MEDIUM")
         return 0.92 if severity == "HIGH" else 0.85
 
-
-def get_confidence(bd, pm, vm_id: str) -> float:
-    """Return cached confidence or compute fresh."""
+def get_confidence(bd: pd.DataFrame, pm: pd.DataFrame, vm_id: str) -> float:
+    """Return cached confidence or compute fresh using Isolation Forest."""
     if vm_id not in _confidence_cache:
         _confidence_cache[vm_id] = compute_confidence(bd, pm, vm_id)
     return _confidence_cache[vm_id]
 
 
+def get_performance_metrics(bd: pd.DataFrame, pm: pd.DataFrame) -> dict:
+    """
+    Compute Precision, Recall, F1 Score for the Isolation Forest model.
+    Uses AnomalyFlag column as ground truth.
+
+    This function is used for the performance metrics document —
+    it shows how well the ML model detects known anomalies.
+    """
+    from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
+
+    all_true  = []
+    all_pred  = []
+    all_scores = []
+
+    for vm_id in ANOMALY_META.keys():
+        try:
+            X      = _prepare_features(bd, pm, vm_id)
+            vm_bd  = bd[bd["ResourceID"] == vm_id].copy()
+            vm_bd["hour"] = pd.to_datetime(vm_bd["Timestamp"]).dt.floor("h")
+            vm_bd_h = vm_bd.groupby("hour").agg(
+                CostUSD    = ("CostUSD", "sum"),
+                AnomalyFlag= ("AnomalyFlag", "first")
+            ).reset_index()
+
+            if len(vm_bd_h) != len(X):
+                continue
+
+            # Ground truth: 1 = anomaly row, 0 = normal
+            y_true = vm_bd_h["AnomalyFlag"].apply(
+                lambda x: 1 if (pd.notna(x) and str(x).strip() != "") else 0
+            ).values
+
+            # Train and predict
+            if vm_id not in _model_cache:
+                compute_confidence(bd, pm, vm_id)
+
+            model  = _model_cache[vm_id]
+            scaler = _scaler_cache[vm_id]
+            X_scaled = scaler.transform(X)
+
+            # -1 from model = anomaly → convert to 1
+            y_pred   = (model.predict(X_scaled) == -1).astype(int)
+            y_scores = -model.score_samples(X_scaled)  # higher = more anomalous
+
+            all_true.extend(y_true.tolist())
+            all_pred.extend(y_pred.tolist())
+            all_scores.extend(y_scores.tolist())
+
+        except Exception as e:
+            print(f"[metrics] Error for {vm_id}: {e}")
+            continue
+
+    if not all_true:
+        return {"error": "Could not compute metrics"}
+
+    all_true   = np.array(all_true)
+    all_pred   = np.array(all_pred)
+    all_scores = np.array(all_scores)
+
+    precision = precision_score(all_true, all_pred, zero_division=0)
+    recall    = recall_score(all_true, all_pred, zero_division=0)
+    f1        = f1_score(all_true, all_pred, zero_division=0)
+
+    try:
+        roc_auc = roc_auc_score(all_true, all_scores)
+    except Exception:
+        roc_auc = 0.0
+
+    return {
+        "model":          "Isolation Forest",
+        "n_estimators":   100,
+        "contamination":  0.05,
+        "features":       FEATURES,
+        "precision":      round(float(precision), 4),
+        "recall":         round(float(recall), 4),
+        "f1_score":       round(float(f1), 4),
+        "roc_auc":        round(float(roc_auc), 4),
+        "total_rows":     len(all_true),
+        "anomaly_rows":   int(all_true.sum()),
+        "normal_rows":    int((all_true == 0).sum()),
+    }
+
+
+# ── All functions below are UNCHANGED from V1 ─────────────────────────────────
+
 def get_summary():
-    """Return summary of all 5 anomalies — confidence computed lazily."""
+    """Return summary of all 5 anomalies with ML-computed confidence."""
     from services.data_loader import get_bd, get_pm
     bd = get_bd()
     pm = get_pm()
@@ -404,7 +660,7 @@ def get_kpis():
 
 
 def get_detail(vm_id: str):
-    """Return full detail for one VM anomaly with computed confidence."""
+    """Return full detail for one VM anomaly with ML-computed confidence."""
     if vm_id not in ANOMALY_META:
         return None
     from services.data_loader import get_bd, get_pm

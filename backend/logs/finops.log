@@ -319,3 +319,200 @@
 2026-05-10 20:22:02  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-05-10 20:22:03  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-05-10 20:23:12  [INFO    ]  main                       FastAPI application shutting down
+2026-05-14 19:13:18  [INFO    ]  root                       ======================================================================
+2026-05-14 19:13:18  [INFO    ]  root                         Azure FinOps AI Platform — Starting up
+2026-05-14 19:13:18  [INFO    ]  root                         Log file  : /Users/kavya/Desktop/Azure-AI-FinOps-App/backend/logs/finops.log
+2026-05-14 19:13:18  [INFO    ]  root                         Log level : INFO
+2026-05-14 19:13:18  [INFO    ]  root                       ======================================================================
+2026-05-14 19:13:18  [INFO    ]  main                       FastAPI application started
+2026-05-14 19:13:18  [INFO    ]  main                       Routers registered: /api/anomalies, /api/tagging
+2026-05-14 19:14:03  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-14 19:14:04  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-14 19:14:29  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-14 19:14:31  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-15 14:34:47  [INFO    ]  main                       FastAPI application shutting down
+2026-05-19 11:11:52  [INFO    ]  root                       ======================================================================
+2026-05-19 11:11:52  [INFO    ]  root                         Azure FinOps AI Platform — Starting up
+2026-05-19 11:11:52  [INFO    ]  root                         Log file  : /Users/kavya/Desktop/Azure-AI-FinOps-App/backend/logs/finops.log
+2026-05-19 11:11:52  [INFO    ]  root                         Log level : INFO
+2026-05-19 11:11:52  [INFO    ]  root                       ======================================================================
+2026-05-19 11:11:52  [INFO    ]  main                       FastAPI application started
+2026-05-19 11:11:52  [INFO    ]  main                       Routers registered: /api/anomalies, /api/tagging
+2026-05-19 11:12:36  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 11:12:37  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 11:12:38  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 11:13:27  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 11:13:28  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 11:13:36  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 11:13:38  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 14:53:38  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 14:53:38  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 14:53:39  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 14:53:39  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 14:55:07  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 14:55:09  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:34:49  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:34:50  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:36:50  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:36:52  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:37:52  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:37:52  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:39:38  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:39:39  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:39:42  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:39:43  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:39:46  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:39:47  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:41:19  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:41:20  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:42:45  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:42:47  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:43:08  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:43:09  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:44:24  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:44:27  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:44:35  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:44:37  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:50:31  [INFO    ]  main                       FastAPI application shutting down
+2026-05-19 15:50:34  [INFO    ]  root                       ======================================================================
+2026-05-19 15:50:34  [INFO    ]  root                         Azure FinOps AI Platform — Starting up
+2026-05-19 15:50:34  [INFO    ]  root                         Log file  : /Users/kavya/Desktop/Azure-AI-FinOps-App/backend/logs/finops.log
+2026-05-19 15:50:34  [INFO    ]  root                         Log level : INFO
+2026-05-19 15:50:34  [INFO    ]  root                       ======================================================================
+2026-05-19 15:50:34  [INFO    ]  main                       FastAPI application started
+2026-05-19 15:50:34  [INFO    ]  main                       Routers registered: /api/anomalies, /api/tagging
+2026-05-19 15:50:45  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 15:50:51  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:13:56  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:13:58  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:14:09  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:14:10  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:14:16  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:14:18  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:15:41  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:17:40  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:17:41  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:17:42  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:17:43  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:17:48  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:17:49  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:17:51  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:18:04  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:18:15  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:20:58  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:22:49  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:22:50  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:25:21  [INFO    ]  main                       FastAPI application shutting down
+2026-05-19 16:25:23  [INFO    ]  root                       ======================================================================
+2026-05-19 16:25:23  [INFO    ]  root                         Azure FinOps AI Platform — Starting up
+2026-05-19 16:25:23  [INFO    ]  root                         Log file  : /Users/kavya/Desktop/Azure-AI-FinOps-App/backend/logs/finops.log
+2026-05-19 16:25:23  [INFO    ]  root                         Log level : INFO
+2026-05-19 16:25:23  [INFO    ]  root                       ======================================================================
+2026-05-19 16:25:23  [INFO    ]  main                       FastAPI application started
+2026-05-19 16:25:23  [INFO    ]  main                       Routers registered: /api/anomalies, /api/tagging
+2026-05-19 16:25:47  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:39:23  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:39:24  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:43:12  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:43:14  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:43:15  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:43:16  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:49:27  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:49:28  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 16:50:40  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 17:20:39  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-19 17:20:40  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-20 14:42:57  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-20 14:42:58  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-20 19:48:34  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-20 19:48:35  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-21 10:46:24  [INFO    ]  groq._base_client          Retrying request to /openai/v1/chat/completions in 0.450048 seconds
+2026-05-21 10:46:26  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-21 10:46:28  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-21 12:08:11  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-21 12:08:12  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-21 12:08:48  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-21 12:08:49  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-21 13:58:19  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-21 13:58:20  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-21 14:00:05  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-21 14:00:07  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-21 19:56:19  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-21 19:56:20  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-22 09:55:04  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-22 09:55:05  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-22 09:55:37  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-22 09:55:38  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-22 10:20:51  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-22 10:20:53  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-22 17:40:26  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-22 17:40:27  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-22 18:05:16  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-22 18:05:17  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-22 21:47:42  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-22 21:47:44  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-23 14:42:19  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-23 14:42:20  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-23 16:42:20  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-23 16:42:21  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 16:26:41  [INFO    ]  root                       ======================================================================
+2026-05-25 16:26:41  [INFO    ]  root                         Azure FinOps AI Platform — Starting up
+2026-05-25 16:26:41  [INFO    ]  root                         Log file  : /Users/kavya/Desktop/Azure-AI-FinOps-App/backend/logs/finops.log
+2026-05-25 16:26:41  [INFO    ]  root                         Log level : INFO
+2026-05-25 16:26:41  [INFO    ]  root                       ======================================================================
+2026-05-25 16:26:41  [INFO    ]  main                       FastAPI application started
+2026-05-25 16:26:41  [INFO    ]  main                       Routers registered: /api/anomalies, /api/tagging
+2026-05-25 16:29:04  [INFO    ]  main                       FastAPI application shutting down
+2026-05-25 16:30:19  [INFO    ]  root                       ======================================================================
+2026-05-25 16:30:19  [INFO    ]  root                         Azure FinOps AI Platform — Starting up
+2026-05-25 16:30:19  [INFO    ]  root                         Log file  : /Users/kavya/Desktop/Azure-AI-FinOps-App/backend/logs/finops.log
+2026-05-25 16:30:19  [INFO    ]  root                         Log level : INFO
+2026-05-25 16:30:19  [INFO    ]  root                       ======================================================================
+2026-05-25 16:30:19  [INFO    ]  main                       FastAPI application started
+2026-05-25 16:30:19  [INFO    ]  main                       Routers registered: /api/anomalies, /api/tagging
+2026-05-25 16:30:19  [INFO    ]  main                       FastAPI application shutting down
+2026-05-25 16:30:20  [INFO    ]  root                       ======================================================================
+2026-05-25 16:30:20  [INFO    ]  root                         Azure FinOps AI Platform — Starting up
+2026-05-25 16:30:20  [INFO    ]  root                         Log file  : /Users/kavya/Desktop/Azure-AI-FinOps-App/backend/logs/finops.log
+2026-05-25 16:30:20  [INFO    ]  root                         Log level : INFO
+2026-05-25 16:30:20  [INFO    ]  root                       ======================================================================
+2026-05-25 16:30:20  [INFO    ]  main                       FastAPI application started
+2026-05-25 16:30:20  [INFO    ]  main                       Routers registered: /api/anomalies, /api/tagging
+2026-05-25 16:30:40  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 16:30:41  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 16:58:02  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 16:58:03  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 18:40:35  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 18:40:36  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 20:04:56  [INFO    ]  main                       FastAPI application shutting down
+2026-05-25 20:04:57  [INFO    ]  root                       ======================================================================
+2026-05-25 20:04:57  [INFO    ]  root                         Azure FinOps AI Platform — Starting up
+2026-05-25 20:04:57  [INFO    ]  root                         Log file  : /Users/kavya/Desktop/Azure-AI-FinOps-App/backend/logs/finops.log
+2026-05-25 20:04:57  [INFO    ]  root                         Log level : INFO
+2026-05-25 20:04:57  [INFO    ]  root                       ======================================================================
+2026-05-25 20:04:57  [INFO    ]  main                       FastAPI application started
+2026-05-25 20:04:57  [INFO    ]  main                       Routers registered: /api/anomalies, /api/tagging
+2026-05-25 20:04:58  [INFO    ]  main                       FastAPI application shutting down
+2026-05-25 20:04:59  [INFO    ]  root                       ======================================================================
+2026-05-25 20:04:59  [INFO    ]  root                         Azure FinOps AI Platform — Starting up
+2026-05-25 20:04:59  [INFO    ]  root                         Log file  : /Users/kavya/Desktop/Azure-AI-FinOps-App/backend/logs/finops.log
+2026-05-25 20:04:59  [INFO    ]  root                         Log level : INFO
+2026-05-25 20:04:59  [INFO    ]  root                       ======================================================================
+2026-05-25 20:04:59  [INFO    ]  main                       FastAPI application started
+2026-05-25 20:04:59  [INFO    ]  main                       Routers registered: /api/anomalies, /api/tagging
+2026-05-25 20:05:24  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 20:05:26  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 20:09:46  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 20:09:47  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 22:12:20  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 22:12:20  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 22:12:21  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-25 22:12:21  [INFO    ]  httpx                      HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-05-26 09:48:21  [INFO    ]  main                       FastAPI application shutting down
+2026-05-26 09:48:23  [INFO    ]  root                       ======================================================================
+2026-05-26 09:48:23  [INFO    ]  root                         Azure FinOps AI Platform — Starting up
+2026-05-26 09:48:23  [INFO    ]  root                         Log file  : /Users/kavya/Desktop/Azure-AI-FinOps-App/backend/logs/finops.log
+2026-05-26 09:48:23  [INFO    ]  root                         Log level : INFO
+2026-05-26 09:48:23  [INFO    ]  root                       ======================================================================
+2026-05-26 09:48:23  [INFO    ]  main                       FastAPI application started
+2026-05-26 09:48:23  [INFO    ]  main                       Routers registered: /api/anomalies, /api/tagging
